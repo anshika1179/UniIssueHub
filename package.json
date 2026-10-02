@@ -1,0 +1,31 @@
+{
+  "name": "uniissuehub",
+  "version": "0.1.0",
+  "description": "UniIssueHub — Smart Campus Complaint & Grievance Management Platform",
+  "private": true,
+  "scripts": {
+    "dev": "echo \"Run 'npm run dev' inside client/ and server/ directories\"",
+    "install:client": "cd client && npm install",
+    "install:server": "cd server && npm install",
+    "install:all": "npm run install:client && npm run install:server",
+    "lint": "echo \"Linting not yet configured\"",
+    "test": "echo \"Testing not yet configured\""
+  },
+  "keywords": [
+    "university",
+    "complaint-management",
+    "grievance",
+    "campus",
+    "mern",
+    "mongodb",
+    "express",
+    "react",
+    "nodejs"
+  ],
+  "author": "Anshika",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anshika1179/UniIssueHub.git"
+  }
+}
