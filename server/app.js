@@ -8,6 +8,7 @@ import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
+import complaintRoutes from './routes/complaintRoutes.js';
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(cookieParser());
 // Routes
 app.use('/api/v1/health', healthRoutes);
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/complaints', complaintRoutes);
 
 // Error handling
 app.use(notFound);

@@ -247,8 +247,8 @@ See [`.env.example`](.env.example) for the full template.
 | Phase 0 | Planning & Architecture | ✅ Completed |
 | Phase 1 | Project Initialization | ✅ Completed |
 | Phase 2 | Authentication & RBAC | ✅ Completed |
-| Phase 3 | Complaint Management | 🔜 Next |
-| Phase 4 | Assignment & Resolution | ⏳ Pending |
+| Phase 3 | Complaint Management | ✅ Completed |
+| Phase 4 | Assignment & Resolution | 🔜 Next |
 | Phase 5 | AI Intelligence | ⏳ Pending |
 | Phase 6 | Real-Time Notifications | ⏳ Pending |
 | Phase 7 | Analytics | ⏳ Pending |
@@ -367,19 +367,45 @@ Tasks:
 - All 15 authentication tests passed
 
 ## Phase 3 — Complaint Management
+Status: COMPLETED
+
+Tasks:
+- [x] Complaint model
+- [x] Complaint creation
+- [x] Complaint validation
+- [x] Complaint categories
+- [x] Complaint priority
+- [x] Complaint status lifecycle
+- [x] Complaint history
+- [x] Complaint listing
+- [x] Complaint details
+- [x] Student complaint ownership
+- [x] Complaint filtering
+- [x] Complaint pagination
+- [x] Complaint API testing
+
+### Phase 3 Implementation Summary
+- Complaint model implemented (title, description, category, priority, location, status).
+- Complaint history model implemented to track lifecycle changes.
+- Automatic complaint number generation (e.g., UIH-2026-000001) implemented using Counter sequence.
+- Complaint creation endpoint implemented with backend validations and initial status locked to 'pending'.
+- Student ownership strictly enforced via `req.user._id` for creating and fetching.
+- Complaint listing API supports pagination, status, category, and priority filtering.
+- Complaint detail and history endpoints implemented with role-based access control.
+- Frontend integrated with `ComplaintForm`, `ComplaintList`, `ComplaintCard`, and `ComplaintDetails`.
+- All Phase 3 test criteria successfully verified without breaking Phase 2 authentication.
+
+## Phase 4 — Assignment & Resolution
 Status: NOT STARTED
 
 Tasks:
-- [ ] Complaint model
-- [ ] Complaint creation
-- [ ] Complaint validation
-- [ ] Complaint categories
-- [ ] Complaint priority
-- [ ] Complaint status lifecycle
-- [ ] Complaint history
-- [ ] Complaint listing
-- [ ] Complaint details
-- [ ] Student complaint ownership
-- [ ] Complaint filtering
-- [ ] Complaint pagination
-- [ ] Complaint API testing
+- [ ] Technician management
+- [ ] Complaint assignment
+- [ ] Assignment model
+- [ ] Technician complaint queue
+- [ ] Assignment authorization
+- [ ] Status transition workflow
+- [ ] Resolution notes
+- [ ] Resolve complaint
+- [ ] Close complaint
+- [ ] Assignment testing

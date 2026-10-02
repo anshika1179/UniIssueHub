@@ -1,16 +1,15 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './features/auth/Login.jsx';
 import Register from './features/auth/Register.jsx';
+import ComplaintList from './features/complaints/ComplaintList.jsx';
+import ComplaintForm from './features/complaints/ComplaintForm.jsx';
+import ComplaintDetails from './features/complaints/ComplaintDetails.jsx';
 
-// ─── Minimal Dashboard (Phase 2 verification only) ───────────────────────────
+// ─── Minimal Dashboard ───────────────────────────
 const Dashboard = () => {
   const { user, logout } = useAuth();
-
-  const handleLogout = async () => {
-    await logout();
-  };
 
   return (
     <div className="min-h-screen bg-cream">
@@ -18,16 +17,16 @@ const Dashboard = () => {
       <header className="border-b border-sage-300 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3">
               <div className="w-9 h-9 bg-sage-500 rounded-md flex items-center justify-center">
                 <span className="text-white font-bold text-sm">U</span>
               </div>
               <span className="text-lg font-semibold text-dark tracking-tight">UniIssueHub</span>
-            </div>
+            </Link>
             <div className="flex items-center gap-4">
               <span className="text-sm text-dark-50 hidden sm:block">{user?.email}</span>
               <button
-                onClick={handleLogout}
+                onClick={logout}
                 className="btn-secondary text-sm"
               >
                 Sign Out
@@ -49,20 +48,31 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Phase 3 Actions */}
+          <div className="card lg:col-span-2">
+            <h2 className="text-sm font-semibold text-dark mb-3 uppercase tracking-wide">Complaints</h2>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <Link to="/complaints" className="btn-secondary text-center">
+                View Complaints
+              </Link>
+              {user?.role === 'student' && (
+                <Link to="/complaints/new" className="btn-primary text-center">
+                  File New Complaint
+                </Link>
+              )}
+            </div>
+          </div>
+
           {/* Session Info */}
-          <div className="card">
+          <div className="card-sage">
             <h2 className="text-sm font-semibold text-dark mb-3 uppercase tracking-wide">Session</h2>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-dark-50">Name</dt>
+                <dt className="text-dark-50 text-xs">Name</dt>
                 <dd className="text-dark font-medium">{user?.name}</dd>
               </div>
               <div>
-                <dt className="text-dark-50">Email</dt>
-                <dd className="text-dark font-medium">{user?.email}</dd>
-              </div>
-              <div>
-                <dt className="text-dark-50">Role</dt>
+                <dt className="text-dark-50 text-xs">Role</dt>
                 <dd>
                   <span className="text-xs bg-sage-300 text-sage-900 px-2 py-0.5 rounded font-medium capitalize">
                     {user?.role}
@@ -70,40 +80,6 @@ const Dashboard = () => {
                 </dd>
               </div>
             </dl>
-          </div>
-
-          {/* Status */}
-          <div className="card-sage">
-            <h2 className="text-sm font-semibold text-dark mb-3 uppercase tracking-wide">Phase 2 — Auth</h2>
-            <ul className="space-y-1.5 text-xs text-dark-50">
-              {[
-                'JWT via HttpOnly cookie',
-                'bcrypt password hashing',
-                'Role-Based Access Control',
-                'Protected React routes',
-                'Session restore on refresh',
-              ].map((item) => (
-                <li key={item} className="flex items-center gap-2">
-                  <span className="text-sage-600">✓</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Next Phase */}
-          <div className="card">
-            <h2 className="text-sm font-semibold text-dark mb-3 uppercase tracking-wide">Coming Next</h2>
-            <p className="text-xs text-dark-50 leading-relaxed">
-              Phase 3 — Complaint Management will allow students to submit, track, and manage campus complaints.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {['Submit', 'Track', 'Filter', 'History'].map((tag) => (
-                <span key={tag} className="text-xs bg-cream-200 text-dark-50 border border-sage-200 px-2 py-0.5 rounded">
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </main>
@@ -119,11 +95,16 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/complaints" element={<ComplaintList />} />
+            <Route path="/complaints/new" element={<ComplaintForm />} />
+            <Route path="/complaints/:id" element={<ComplaintDetails />} />
           </Route>
-          {/* Catch-all → login */}
-          <Route path="*" element={<Navigate to="/login" replace />} />
+          
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
