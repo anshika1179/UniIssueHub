@@ -245,9 +245,9 @@ See [`.env.example`](.env.example) for the full template.
 | Phase | Description | Status |
 |---|---|---|
 | Phase 0 | Planning & Architecture | ✅ Completed |
-| Phase 1 | Project Initialization | 🔜 Next |
-| Phase 2 | Authentication & RBAC | ⏳ Pending |
-| Phase 3 | Complaint Management | ⏳ Pending |
+| Phase 1 | Project Initialization | ✅ Completed |
+| Phase 2 | Authentication & RBAC | ✅ Completed |
+| Phase 3 | Complaint Management | 🔜 Next |
 | Phase 4 | Assignment & Resolution | ⏳ Pending |
 | Phase 5 | AI Intelligence | ⏳ Pending |
 | Phase 6 | Real-Time Notifications | ⏳ Pending |
@@ -335,19 +335,51 @@ Tasks:
 - ESLint/Prettier configured
 
 ## Phase 2 — Authentication & RBAC
+Status: COMPLETED
+
+Tasks:
+- [x] User model
+- [x] Registration
+- [x] Login
+- [x] Password hashing
+- [x] JWT authentication
+- [x] Protected routes
+- [x] Role-based authorization
+- [x] Student role
+- [x] Admin role
+- [x] Warden role
+- [x] Technician role
+- [x] Authentication error handling
+- [x] Authentication testing
+
+### Phase 2 Implementation Summary
+- User model implemented (name, email, password, role, rollNumber, department, hostel, isActive)
+- Student registration implemented with server-side validation (email format, password min 8 chars)
+- Login implemented with JWT issued via HttpOnly secure cookie
+- bcrypt password hashing implemented (salt rounds: 12)
+- JWT authentication middleware implemented (cookie-based)
+- Role-based authorization middleware implemented (authorizeRoles)
+- Protected frontend routes implemented (ProtectedRoute component with role support)
+- Authentication context implemented (AuthProvider with login, register, logout, refreshUser)
+- Logout implemented (cookie cleared server-side)
+- /auth/me implemented (returns authenticated user without password)
+- Authentication security checks implemented (inactive user check, role forcing, safe error messages)
+- All 15 authentication tests passed
+
+## Phase 3 — Complaint Management
 Status: NOT STARTED
 
 Tasks:
-- [ ] User model
-- [ ] Registration
-- [ ] Login
-- [ ] Password hashing
-- [ ] JWT authentication
-- [ ] Protected routes
-- [ ] Role-based authorization
-- [ ] Student role
-- [ ] Admin role
-- [ ] Warden role
-- [ ] Technician role
-- [ ] Authentication error handling
-- [ ] Authentication testing
+- [ ] Complaint model
+- [ ] Complaint creation
+- [ ] Complaint validation
+- [ ] Complaint categories
+- [ ] Complaint priority
+- [ ] Complaint status lifecycle
+- [ ] Complaint history
+- [ ] Complaint listing
+- [ ] Complaint details
+- [ ] Student complaint ownership
+- [ ] Complaint filtering
+- [ ] Complaint pagination
+- [ ] Complaint API testing

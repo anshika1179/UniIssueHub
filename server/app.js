@@ -6,6 +6,8 @@ import config from './config/config.js';
 import healthRoutes from './routes/healthRoutes.js';
 import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
+import cookieParser from 'cookie-parser';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 
@@ -30,9 +32,11 @@ app.use(limiter);
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Routes
 app.use('/api/v1/health', healthRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Error handling
 app.use(notFound);
