@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useSocket } from '../../context/SocketContext';
 
-const NotificationPanel = ({ onClose }) => {
+export const NotificationPanel = ({ onClose, className = "absolute top-12 right-0 w-80" }) => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const { socket, unreadCount, setUnreadCount } = useSocket();
@@ -60,7 +60,7 @@ const NotificationPanel = ({ onClose }) => {
   };
 
   return (
-    <div className="absolute top-12 right-0 w-80 bg-white border border-sage-300 rounded-md shadow-lg z-50 overflow-hidden flex flex-col max-h-96">
+    <div className={`${className} bg-white border border-sage-300 rounded-md shadow-lg z-50 overflow-hidden flex flex-col max-h-96`}>
       <div className="flex justify-between items-center p-3 bg-sage-50 border-b border-sage-200">
         <h3 className="font-semibold text-dark text-sm">Notifications</h3>
         {unreadCount > 0 && (
