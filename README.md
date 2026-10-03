@@ -460,16 +460,28 @@ Checklist:
 
 ## Phase 6 — Real-time Notifications
 
-Status: NOT STARTED
+Status: COMPLETED
 
 Checklist:
 
-- [ ] Socket.IO setup
-- [ ] Real-time complaint notifications
-- [ ] Assignment notifications
-- [ ] Status-change notifications
-- [ ] Email notification service
-- [ ] Email templates
-- [ ] UniIssueHub email integration
-- [ ] Notification preferences
-- [ ] Notification history
+- [x] Socket.IO setup
+- [x] Real-time complaint notifications
+- [x] Assignment notifications
+- [x] Status-change notifications
+- [x] Email notification service
+- [x] Email templates
+- [x] UniIssueHub email integration
+- [x] Notification history
+- [x] Unread counts and read-state management
+
+### Phase 6 Implementation Summary
+- **Architecture:** Implemented using `socket.io` for real-time WebSockets and persistent database records using a `Notification` model. Email dispatch is managed via `nodemailer`.
+- **Database Model:** Notifications are saved persistently so offline users see them when they log in. Uses efficient compound indexing (`recipientId`, `isRead`, `createdAt`).
+- **Events Triggers:** Hooks gracefully injected into the Complaint and Assignment controllers trigger notifications on create, assign, reassign, accept, start, resolve, and close.
+- **Fail-safe Design:** The `notificationService` gracefully catches all errors (like missing SMTP credentials or disconnected sockets) ensuring the main operation never crashes or hangs if a notification fails.
+- **Security:** Secret SMTP credentials must only reside in the `.env` file — there are absolutely no secrets or passwords in the source code. WebSockets demand JWT auth in the handshake, and all connections are isolated to private `user:<userId>` rooms to prevent unauthorized access to broadcasts.
+- **Testing Results:** 26/26 tests passed in `test-phase6.js`. All previous Phase 1-5 tests continue to pass.
+
+## Phase 7 — Analytics & Reports
+
+Status: NOT STARTED

@@ -2,6 +2,7 @@ import Assignment from '../models/Assignment.js';
 import Complaint from '../models/Complaint.js';
 import ComplaintHistory from '../models/ComplaintHistory.js';
 import User from '../models/User.js';
+import { createNotification } from '../services/notification/notificationService.js';
 
 export const assignTechnician = async (req, res) => {
   try {
@@ -40,6 +41,15 @@ export const assignTechnician = async (req, res) => {
       toStatus: 'assigned',
       comment: `Assigned to technician ${technician.name}`
     });
+
+    createNotification({
+      recipientId: technicianId,
+      type: 'complaint_assigned',
+      title: 'New Complaint Assigned',
+      message: `You have been assigned to complaint ${complaint.complaintNumber}.`,
+      complaintId: complaint._id,
+      assignmentId: assignment._id
+    }).catch(err => console.error(err));
 
     res.status(201).json({ success: true, data: assignment });
   } catch (error) {
@@ -127,6 +137,15 @@ export const acceptAssignment = async (req, res) => {
       comment: 'Technician accepted the assignment.'
     });
 
+    createNotification({
+      recipientId: complaint.studentId,
+      type: 'assignment_accepted',
+      title: 'Assignment Accepted',
+      message: `A technician has accepted your complaint ${complaint.complaintNumber}.`,
+      complaintId: complaint._id,
+      assignmentId: assignment._id
+    }).catch(err => console.error(err));
+
     res.status(200).json({ success: true, data: assignment });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -157,6 +176,15 @@ export const startAssignment = async (req, res) => {
       toStatus: 'in_progress',
       comment: 'Technician started working on the complaint.'
     });
+
+    createNotification({
+      recipientId: complaint.studentId,
+      type: 'work_started',
+      title: 'Work Started',
+      message: `A technician has started working on your complaint ${complaint.complaintNumber}.`,
+      complaintId: complaint._id,
+      assignmentId: assignment._id
+    }).catch(err => console.error(err));
 
     res.status(200).json({ success: true, data: assignment });
   } catch (error) {
@@ -193,6 +221,15 @@ export const resolveAssignment = async (req, res) => {
       toStatus: 'resolved',
       comment: `Resolution Notes: ${resolutionNotes.trim()}`
     });
+
+    createNotification({
+      recipientId: complaint.studentId,
+      type: 'complaint_resolved',
+      title: 'Complaint Resolved',
+      message: `Your complaint ${complaint.complaintNumber} has been resolved.`,
+      complaintId: complaint._id,
+      assignmentId: assignment._id
+    }).catch(err => console.error(err));
 
     res.status(200).json({ success: true, data: assignment });
   } catch (error) {
@@ -245,6 +282,15 @@ export const reassignTechnician = async (req, res) => {
       toStatus: 'assigned',
       comment: `Reassigned to technician ${newTechnician.name}`
     });
+
+    createNotification({
+      recipientId: technicianId,
+      type: 'complaint_reassigned',
+      title: 'New Complaint Assigned',
+      message: `You have been reassigned to complaint ${complaint.complaintNumber}.`,
+      complaintId: complaint._id,
+      assignmentId: newAssignment._id
+    }).catch(err => console.error(err));
 
     res.status(200).json({ success: true, data: newAssignment });
   } catch (error) {

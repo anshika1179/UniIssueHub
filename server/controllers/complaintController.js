@@ -2,6 +2,7 @@ import Complaint from '../models/Complaint.js';
 import ComplaintHistory from '../models/ComplaintHistory.js';
 import Counter from '../models/Counter.js';
 import { analyzeComplaint } from '../services/ai/aiService.js';
+import { createNotification } from '../services/notification/notificationService.js';
 
 const VALID_CATEGORIES = ['electricity', 'water', 'internet', 'cleanliness', 'maintenance', 'security', 'food', 'hostel', 'academic', 'other'];
 const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'];
@@ -63,6 +64,15 @@ export const createComplaint = async (req, res) => {
     analyzeComplaint(complaint._id).catch(err => {
       console.error(`AI Analysis failed for ${complaint._id}:`, err.message);
     });
+
+    // Phase 6 Notifications (Fire & Forget)
+    createNotification({
+      recipientId: req.user._id, // student
+      type: 'complaint_created',
+      title: 'Complaint Created',
+      message: `Your complaint ${complaintNumber} has been submitted successfully.`,
+      complaintId: complaint._id
+    }).catch(err => console.error(err));
 
     res.status(201).json({ success: true, data: complaint });
   } catch (error) {
@@ -173,6 +183,15 @@ export const closeComplaint = async (req, res) => {
       toStatus: 'closed',
       comment: 'Complaint officially closed by staff.'
     });
+
+    // Notify student
+    createNotification({
+      recipientId: complaint.studentId,
+      type: 'complaint_closed',
+      title: 'Complaint Closed',
+      message: `Your complaint ${complaint.complaintNumber} has been closed.`,
+      complaintId: complaint._id
+    }).catch(err => console.error(err));
 
     res.status(200).json({ success: true, data: complaint });
   } catch (error) {

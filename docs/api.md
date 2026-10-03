@@ -271,5 +271,13 @@ Forces a fresh AI analysis run and returns the result.
 
 ---
 
-> **Note**: Phases 1–5 endpoints are implemented. Phases 6+ endpoints are planned.
+### Notifications — `/api/v1/notifications` (Phase 6)
 
+| Method | Endpoint | Description | Auth Required |
+|---|---|---|---|
+| GET | `/` | Get user notifications (paginated) | Yes |
+| GET | `/unread-count` | Get unread notifications count | Yes |
+| PATCH | `/:id/read` | Mark specific notification as read | Yes |
+| PATCH | `/read-all` | Mark all user notifications as read | Yes |
+
+> **Note**: Phases 1–6 endpoints are implemented. Phases 7+ endpoints are planned.

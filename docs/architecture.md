@@ -205,3 +205,7 @@ Response
 ---
 
 > **Note**: This document describes the planned architecture. No implementation has been created yet.
+
+## Phase 6 — Real-Time Notifications
+Added `Socket.IO` attached to the main Express server, using JWT-based authentication. Private rooms per user (`user:<userId>`) ensure secure targeted event broadcasting. 
+The `notificationService` manages the creation of persistent DB records, triggering socket events, and delegating to `emailService` for Nodemailer SMTP dispatch safely separated from core requests.

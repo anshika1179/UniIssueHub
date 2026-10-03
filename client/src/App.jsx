@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { SocketProvider } from './context/SocketContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './features/auth/Login.jsx';
 import Register from './features/auth/Register.jsx';
@@ -7,6 +8,7 @@ import ComplaintList from './features/complaints/ComplaintList.jsx';
 import ComplaintForm from './features/complaints/ComplaintForm.jsx';
 import ComplaintDetails from './features/complaints/ComplaintDetails.jsx';
 import TechnicianQueue from './features/complaints/TechnicianQueue.jsx';
+import { NotificationBell } from './features/notifications/NotificationUI.jsx';
 
 // ─── Minimal Dashboard ───────────────────────────
 const Dashboard = () => {
@@ -25,6 +27,7 @@ const Dashboard = () => {
               <span className="text-lg font-semibold text-dark tracking-tight">UniIssueHub</span>
             </Link>
             <div className="flex items-center gap-4">
+              <NotificationBell />
               <span className="text-sm text-dark-50 hidden sm:block">{user?.email}</span>
               <button
                 onClick={logout}
@@ -99,23 +102,25 @@ const Dashboard = () => {
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/complaints" element={<ComplaintList />} />
-            <Route path="/complaints/new" element={<ComplaintForm />} />
-            <Route path="/complaints/:id" element={<ComplaintDetails />} />
-            <Route path="/assignments/my" element={<TechnicianQueue />} />
-          </Route>
-          
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <SocketProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/complaints" element={<ComplaintList />} />
+              <Route path="/complaints/new" element={<ComplaintForm />} />
+              <Route path="/complaints/:id" element={<ComplaintDetails />} />
+              <Route path="/assignments/my" element={<TechnicianQueue />} />
+            </Route>
+            
+            {/* Catch-all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 }
