@@ -248,8 +248,8 @@ See [`.env.example`](.env.example) for the full template.
 | Phase 1 | Project Initialization | ✅ Completed |
 | Phase 2 | Authentication & RBAC | ✅ Completed |
 | Phase 3 | Complaint Management | ✅ Completed |
-| Phase 4 | Assignment & Resolution | 🔜 Next |
-| Phase 5 | AI Intelligence | ⏳ Pending |
+| Phase 4 | Assignment & Resolution | ✅ Completed |
+| Phase 5 | AI Intelligence | 🔜 Next |
 | Phase 6 | Real-Time Notifications | ⏳ Pending |
 | Phase 7 | Analytics | ⏳ Pending |
 | Phase 8 | Testing & Security | ⏳ Pending |
@@ -396,16 +396,40 @@ Tasks:
 - All Phase 3 test criteria successfully verified without breaking Phase 2 authentication.
 
 ## Phase 4 — Assignment & Resolution
-Status: NOT STARTED
+Status: COMPLETED
 
 Tasks:
-- [ ] Technician management
-- [ ] Complaint assignment
-- [ ] Assignment model
-- [ ] Technician complaint queue
-- [ ] Assignment authorization
-- [ ] Status transition workflow
-- [ ] Resolution notes
-- [ ] Resolve complaint
-- [ ] Close complaint
-- [ ] Assignment testing
+- [x] Technician management
+- [x] Complaint assignment
+- [x] Assignment model
+- [x] Technician complaint queue
+- [x] Assignment authorization
+- [x] Status transition workflow
+- [x] Resolution notes
+- [x] Resolve complaint
+- [x] Close complaint
+- [x] Assignment testing
+
+### Phase 4 Implementation Summary
+- **Assignment Model:** Created to track complaint-to-technician assignments, including timestamps (`assignedAt`, `acceptedAt`, `startedAt`, `completedAt`) and `resolutionNotes`.
+- **Assignment Lifecycle:** Implemented explicit transitions from `assigned` → `accepted` → `in_progress` → `completed`.
+- **Role Permissions:** Admins and Wardens can assign/reassign technicians and close resolved complaints. Technicians are isolated to their own assignments. Students cannot modify assignments.
+- **Complaint Status Workflow:** Backend enforces logical status transitions (`pending` → `assigned` → `in_progress` → `resolved` → `closed`).
+- **APIs Added:** `POST /:id/assign`, `GET /:id/assignment`, `GET /assignments/my`, `PATCH /:id/accept`, `PATCH /:id/start`, `PATCH /:id/resolve`, `PATCH /:id/reassign`, and `PATCH /:id/close`.
+- **Frontend Components:** Created `AssignmentPanel` (for admins/wardens/technicians in complaint details), `TechnicianQueue` (for the technician dashboard layout), and integrated `assignmentService`. 
+- **Security Check:** Validations added to reject unassigned interactions, invalid technicians, duplicate active assignments, and modifying closed complaints.
+- **Testing Results:** 22/22 API integration test requirements checked and verified.
+- **Design Decisions:** Removed multi-document `session` transactions because default standalone MongoDB setups (common for local dev environments) do not support them. Operations are still sequenced logically to avoid partial state errors. Reassignment creates a new Assignment record while cancelling the previous one to maintain history cleanly.
+
+## Phase 5 — AI Intelligence
+
+Status: NOT STARTED
+
+Checklist:
+
+- [ ] AI complaint categorization
+- [ ] AI priority recommendation
+- [ ] Sentiment/urgency analysis
+- [ ] Duplicate complaint detection
+- [ ] ETA/resolution estimation
+- [ ] Technical suggestions

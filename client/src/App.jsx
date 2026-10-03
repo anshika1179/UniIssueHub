@@ -6,6 +6,7 @@ import Register from './features/auth/Register.jsx';
 import ComplaintList from './features/complaints/ComplaintList.jsx';
 import ComplaintForm from './features/complaints/ComplaintForm.jsx';
 import ComplaintDetails from './features/complaints/ComplaintDetails.jsx';
+import TechnicianQueue from './features/complaints/TechnicianQueue.jsx';
 
 // ─── Minimal Dashboard ───────────────────────────
 const Dashboard = () => {
@@ -48,13 +49,20 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Phase 3 Actions */}
+          {/* Phase 3 & 4 Actions */}
           <div className="card lg:col-span-2">
-            <h2 className="text-sm font-semibold text-dark mb-3 uppercase tracking-wide">Complaints</h2>
+            <h2 className="text-sm font-semibold text-dark mb-3 uppercase tracking-wide">Actions</h2>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <Link to="/complaints" className="btn-secondary text-center">
-                View Complaints
-              </Link>
+              {user?.role !== 'technician' && (
+                <Link to="/complaints" className="btn-secondary text-center">
+                  View Complaints
+                </Link>
+              )}
+              {user?.role === 'technician' && (
+                <Link to="/assignments/my" className="btn-secondary text-center">
+                  My Assignments
+                </Link>
+              )}
               {user?.role === 'student' && (
                 <Link to="/complaints/new" className="btn-primary text-center">
                   File New Complaint
@@ -101,6 +109,7 @@ function App() {
             <Route path="/complaints" element={<ComplaintList />} />
             <Route path="/complaints/new" element={<ComplaintForm />} />
             <Route path="/complaints/:id" element={<ComplaintDetails />} />
+            <Route path="/assignments/my" element={<TechnicianQueue />} />
           </Route>
           
           {/* Catch-all */}

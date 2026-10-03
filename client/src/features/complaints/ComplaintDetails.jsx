@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import complaintService from './complaintService.js';
+import AssignmentPanel from './AssignmentPanel.jsx';
 
 const ComplaintDetails = () => {
   const { id } = useParams();
@@ -9,21 +10,22 @@ const ComplaintDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  const fetchDetails = async () => {
+    try {
+      const [compRes, histRes] = await Promise.all([
+        complaintService.getComplaint(id),
+        complaintService.getComplaintHistory(id)
+      ]);
+      setComplaint(compRes.data);
+      setHistory(histRes.data);
+    } catch (err) {
+      setError(err?.message || 'Failed to load complaint details.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const [compRes, histRes] = await Promise.all([
-          complaintService.getComplaint(id),
-          complaintService.getComplaintHistory(id)
-        ]);
-        setComplaint(compRes.data);
-        setHistory(histRes.data);
-      } catch (err) {
-        setError(err?.message || 'Failed to load complaint details.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDetails();
   }, [id]);
 
@@ -59,6 +61,7 @@ const ComplaintDetails = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
+          <AssignmentPanel complaint={complaint} onUpdate={fetchDetails} />
           <div className="card-sage text-sm">
             <h3 className="font-semibold text-dark mb-3 uppercase tracking-wider text-xs border-b border-sage-300 pb-2">Properties</h3>
             <dl className="space-y-3">
