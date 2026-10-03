@@ -225,4 +225,51 @@ Authorization: Bearer <access_token>
 
 ---
 
-> **Note**: This document describes the planned API design. No endpoints have been implemented yet.
+### AI Intelligence — `/api/v1/ai` (Phase 5)
+
+| Method | Endpoint | Description | Auth Required | Roles |
+|---|---|---|---|---|
+| GET | `/complaint/:complaintId` | Get AI analysis for a complaint | Yes | Student (own), Admin, Warden, Technician (assigned) |
+| POST | `/analyze/:complaintId` | Trigger/re-run AI analysis | Yes | Student (own), Admin, Warden, Technician (assigned) |
+
+#### GET `/api/v1/ai/complaint/:complaintId`
+
+Returns the stored AI analysis for a complaint. If no analysis exists yet, triggers one synchronously.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "complaintId": "...",
+    "categoryRecommendation": "water",
+    "categoryConfidence": 0.85,
+    "priorityRecommendation": "high",
+    "priorityConfidence": 0.80,
+    "sentiment": "negative",
+    "urgency": "high",
+    "urgencyConfidence": 0.75,
+    "isDuplicate": false,
+    "duplicateConfidence": 0.90,
+    "matchedComplaints": [],
+    "estimatedHours": 3,
+    "etaConfidence": 0.60,
+    "etaBasis": "Rule-based historical estimate for category and priority.",
+    "technicalSuggestions": [
+      "Shut off main valve if flooding.",
+      "Check for pipe blockages."
+    ],
+    "provider": "local",
+    "model": "rule-based-v1"
+  }
+}
+```
+
+#### POST `/api/v1/ai/analyze/:complaintId`
+
+Forces a fresh AI analysis run and returns the result.
+
+---
+
+> **Note**: Phases 1–5 endpoints are implemented. Phases 6+ endpoints are planned.
+

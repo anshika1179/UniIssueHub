@@ -1,6 +1,7 @@
 import Complaint from '../models/Complaint.js';
 import ComplaintHistory from '../models/ComplaintHistory.js';
 import Counter from '../models/Counter.js';
+import { analyzeComplaint } from '../services/ai/aiService.js';
 
 const VALID_CATEGORIES = ['electricity', 'water', 'internet', 'cleanliness', 'maintenance', 'security', 'food', 'hostel', 'academic', 'other'];
 const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'];
@@ -56,6 +57,11 @@ export const createComplaint = async (req, res) => {
       action: 'created',
       toStatus: 'pending',
       comment: 'Complaint submitted.'
+    });
+
+    // Phase 5 AI Intelligence (Fire & Forget)
+    analyzeComplaint(complaint._id).catch(err => {
+      console.error(`AI Analysis failed for ${complaint._id}:`, err.message);
     });
 
     res.status(201).json({ success: true, data: complaint });

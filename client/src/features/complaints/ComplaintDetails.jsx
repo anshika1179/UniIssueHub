@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import complaintService from './complaintService.js';
 import AssignmentPanel from './AssignmentPanel.jsx';
+import AIInsights from './AIInsights.jsx';
 
 const ComplaintDetails = () => {
   const { id } = useParams();
@@ -62,6 +63,7 @@ const ComplaintDetails = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           <AssignmentPanel complaint={complaint} onUpdate={fetchDetails} />
+          <AIInsights complaintId={complaint._id} />
           <div className="card-sage text-sm">
             <h3 className="font-semibold text-dark mb-3 uppercase tracking-wider text-xs border-b border-sage-300 pb-2">Properties</h3>
             <dl className="space-y-3">

@@ -1,149 +1,135 @@
-# AI & NLP Architecture
+# UniIssueHub — AI Intelligence Architecture
 
 ## Overview
-The AI/NLP module provides intelligent complaint processing using JavaScript-based NLP libraries. The system uses a combination of rule-based and statistical approaches, all running on the Node.js backend without external AI APIs.
 
----
+Phase 5 adds AI-assisted intelligence to the complaint management workflow. AI provides **recommendations only** — it never directly modifies complaint state, priority, ownership, or assignments.
 
-## Components
-
-### 1. Auto-Categorization Engine
-- **Purpose**: Automatically suggest the complaint category based on title and description text.
-- **Approach**:
-  - Keyword-based rule engine as the primary method
-  - NLP library (`natural` npm package) for tokenization, stemming, and TF-IDF
-  - Category keyword dictionaries mapping terms to categories
-  - Confidence scoring to determine suggestion reliability
-- **Categories**:
-  - `infrastructure`
-  - `academic`
-  - `hostel`
-  - `mess/canteen`
-  - `library`
-  - `IT services`
-  - `transport`
-  - `administrative`
-  - `ragging/harassment`
-  - `other`
-- **Fallback**: If confidence is below threshold, mark as `other` and flag for manual review.
-
-### 2. Priority Detection via Sentiment Analysis
-- **Purpose**: Detect urgency and severity from complaint text.
-- **Approach**:
-  - Sentiment analysis using `natural` SentimentAnalyzer or `sentiment` npm package
-  - Urgency keyword detection (e.g., `emergency`, `urgent`, `dangerous`, `immediately`)
-  - Safety-related keyword boosting for higher priority
-  - Combined scoring: sentiment score + urgency keywords + safety keywords → suggested priority
-- **Priority Mapping**:
-  - **Critical**: Safety-related keywords + very negative sentiment
-  - **High**: Urgency keywords + negative sentiment
-  - **Medium**: Moderate negativity or neutral sentiment
-  - **Low**: General feedback, suggestions, or positive/neutral inquiries
-
-### 3. Duplicate Detection
-- **Purpose**: Identify potentially duplicate or similar complaints.
-- **Approach**:
-  - TF-IDF vectorization of complaint text using `natural`
-  - Cosine similarity comparison against recent complaints (last 30 days)
-  - Threshold-based matching (e.g., similarity > 0.7 = potential duplicate)
-  - Same-category and same-department filtering to narrow search
-- **Output**: List of similar complaint IDs with corresponding similarity scores.
-
-### 4. Smart Suggestions
-- **Purpose**: Show previously resolved similar complaints as reference.
-- **Approach**:
-  - When a user submits a complaint, search resolved complaints with similar keywords
-  - Use TF-IDF similarity matching
-  - Return top 3–5 similar resolved complaints with their resolution notes
-  - Helps users find existing solutions before submitting
-- **Output**: Ranked list of relevant resolved complaints with summaries and resolution steps.
-
-### 5. Trend Analysis
-- **Purpose**: Identify patterns, recurring bottlenecks, and anomalies in complaint data.
-- **Approach**:
-  - Time-series analysis of complaint volume grouped by category and department
-  - Moving average calculations to detect spikes over defined time windows
-  - Anomaly detection rule: if complaints in a category exceed 2x the moving average, flag as an anomaly
-  - Weekly and monthly trend reports generated for administrator dashboards
-
----
-
-## NLP Libraries
-
-| Library | Purpose |
-|---|---|
-| `natural` | Tokenization, stemming, TF-IDF, Naive Bayes classifier, sentiment analysis |
-| `compromise` | Part-of-speech tagging, entity extraction |
-| `sentiment` | Lexicon-based sentiment analysis (alternative/complement to `natural`) |
-| `stopword` | Stop word removal for text preprocessing |
-
----
-
-## AI Service Architecture
+## Architecture
 
 ```
-Complaint Input (title + description)
-         ↓
-   Text Preprocessing
-   (tokenize, lowercase, remove stopwords, stem)
-         ↓
-   ┌─────────────────────────────────┐
-   │         Parallel Processing     │
-   │                                 │
-   │  ┌─────────────┐  ┌──────────┐ │
-   │  │Categorization│  │Sentiment │ │
-   │  │  Engine      │  │Analysis  │ │
-   │  └──────┬──────┘  └─────┬────┘ │
-   │         │               │      │
-   │  ┌──────┴──────┐  ┌─────┴────┐ │
-   │  │  Duplicate   │  │Priority  │ │
-   │  │  Detection   │  │Detection │ │
-   │  └──────┬──────┘  └─────┬────┘ │
-   │         │               │      │
-   │  ┌──────┴──────┐        │      │
-   │  │   Smart     │        │      │
-   │  │ Suggestions │        │      │
-   │  └─────────────┘        │      │
-   └─────────────────────────┘      │
-         ↓                          │
-   AI Metadata Object               │
-   (stored with complaint)          ↓
+Complaint Controller (createComplaint)
+        ↓ (fire & forget)
+AI Service (aiService.js)
+        ↓
+Local Provider (localProvider.js)
+        ↓
+AIAnalysis Model (stored in MongoDB)
+        ↓
+AI Controller (aiController.js)
+        ↓
+Frontend (AIInsights.jsx)
 ```
 
----
+## Provider Abstraction
 
-## Processing Flow
+The AI system uses a provider pattern controlled by the `AI_PROVIDER` environment variable.
 
-1. **Submission**: User submits a complaint with title and description.
-2. **Handoff**: Backend receives complaint data and passes raw text to the AI service.
-3. **Preprocessing**: AI service tokenizes text, converts to lowercase, eliminates stop words, and applies stemming.
-4. **Categorization**: Categorization engine calculates category scores and suggests a category with a confidence metric.
-5. **Sentiment & Priority**: Sentiment analyzer evaluates emotional valence and urgency keywords to suggest a priority level (`Critical`, `High`, `Medium`, `Low`).
-6. **Duplicate Check**: Duplicate detector computes cosine similarity against recent active issues to locate duplicates.
-7. **Smart Suggestions**: Suggestion engine searches resolved issues for matches to provide self-help reference answers.
-8. **Metadata Storage**: All analysis results are consolidated and saved in the complaint's `aiMetadata` field.
-9. **Auto-Assignment**: If auto-categorization confidence exceeds the defined threshold, category is automatically assigned.
-10. **Duplicate Notification**: If a potential duplicate is detected above threshold, the user and admins are alerted with links to the existing complaint.
+| Provider | Status | Description |
+|----------|--------|-------------|
+| `local` | ✅ Active | Rule-based keyword matching. No external dependencies. |
+| `ollama` | 🔜 Future | Local LLM via Ollama API. |
+| `openai` | 🔜 Future | OpenAI GPT API. |
 
----
+The provider is selected in `server/services/ai/aiService.js` via `getProvider()`. Adding a new provider requires implementing the same interface as `localProvider.js`.
 
-## Configuration
+### Provider Interface
 
-| Setting | Default Value | Description |
-|---|---|---|
-| `CATEGORIZATION_CONFIDENCE_THRESHOLD` | `0.6` | Minimum confidence score required to auto-assign category |
-| `DUPLICATE_SIMILARITY_THRESHOLD` | `0.7` | Cosine similarity cutoff to flag complaints as duplicates |
-| `SIMILAR_SEARCH_WINDOW_DAYS` | `30` | Time horizon (in days) to check for duplicate complaints |
-| `MAX_SUGGESTIONS_COUNT` | `5` | Maximum number of similar resolved complaints to return |
+Each provider must export:
 
----
+- `categorize(title, description)` → `{ category, confidence, source }`
+- `recommendPriority(title, description, category)` → `{ priority, confidence, reason }`
+- `analyzeSentiment(title, description)` → `{ sentiment, urgency, confidence }`
+- `detectDuplicates(title, description, category, location)` → `{ isDuplicate, confidence, matchedComplaints }`
+- `estimateEta(category, priority)` → `{ estimatedHours, confidence, basis }`
+- `generateSuggestions(category, priority)` → `{ suggestions: string[] }`
 
-## Limitations & Future Enhancements
+## Features
 
-- **Current Limitations**:
-  - Current implementation relies primarily on keyword matching and dictionary lookups, which may struggle with misspellings or campus-specific colloquialisms.
-  - TF-IDF and keyword-based approaches do not fully capture semantic context compared to transformer models.
-- **Future Enhancements**:
-  - **Trained Classifiers**: Train a Naive Bayes or SVM classifier on historical campus complaint datasets for higher classification accuracy.
-  - **External NLP Integration**: Optional integration with cloud NLP APIs (e.g., Google Cloud Natural Language, OpenAI) for complex multilingual complaints and advanced semantic matching.
-  - **Adaptive Feedback Loop**: Track administrator category and priority reassignments to dynamically refine keyword weights and improve model accuracy over time.
+### 1. Complaint Categorization
+
+- **Method:** Keyword matching against category-specific word lists.
+- **Categories:** Uses the existing Complaint model enum (`electricity`, `water`, `internet`, `cleanliness`, `maintenance`, `security`, `food`, `hostel`, `academic`, `other`).
+- **Confidence threshold:** Keywords found → 0.85 confidence. Fallback to `other` → 0.50 confidence.
+- **Output:** `{ category, confidence, source }`
+
+### 2. Priority Recommendation
+
+- **Method:** Scans text for critical/high-urgency keywords.
+- **Priorities:** Uses existing enum (`low`, `medium`, `high`, `critical`).
+- **Logic:**
+  - Critical words (fire, flood, theft, emergency) → `critical` (0.90)
+  - High words (outage, urgent, broken pipe) → `high` (0.80)
+  - Default → `medium` (0.70)
+- **Output includes reason string** for explainability.
+
+### 3. Sentiment / Urgency Analysis
+
+- **Sentiment:** `positive`, `neutral`, `negative` based on emotional keywords.
+- **Urgency:** `low`, `medium`, `high`, `critical` based on urgency indicators.
+- **Purpose:** Operational signal for faster triage — not a personal assessment.
+
+### 4. Duplicate Detection
+
+- **Strategy:**
+  1. Filter recent complaints by same category (excludes `closed`/`rejected`).
+  2. Limit candidates to 10 most recent.
+  3. Extract significant words (>4 chars) from the new complaint title.
+  4. Count word overlap against each candidate's title + description.
+  5. Similarity = matchCount / totalWords.
+  6. Threshold: similarity > 0.6 counts as a potential duplicate.
+- **Output:** Top 3 matched complaints with similarity scores.
+- **Important:** Duplicates are flagged, never auto-rejected.
+
+### 5. ETA / Resolution Estimation
+
+- **Method:** Category-based base hours, adjusted by priority multiplier.
+- **Base hours:** electricity=4, water=6, internet=12, security=2, etc.
+- **Priority multipliers:** critical=÷4, high=÷2, low=×2, medium=×1.
+- **Confidence:** 0.60 (acknowledges this is an estimate, not a guarantee).
+
+### 6. Technical Suggestions
+
+- **Method:** Category-to-suggestions mapping.
+- **Safety:** Suggestions are maintenance-appropriate. No hazardous instructions.
+- **Purpose:** Guidance for technicians — never auto-executed.
+
+## Data Storage
+
+AI results are stored in a separate `AIAnalysis` model (not embedded in `Complaint`).
+
+This keeps AI recommendations isolated from the authoritative complaint data.
+
+## Fallback Strategy
+
+| Failure | Behavior |
+|---------|----------|
+| AI service unavailable | Complaint creation succeeds; AI analysis absent. |
+| AI timeout | Fire-and-forget; no blocking. |
+| Invalid AI output | Mongoose schema validation rejects bad data. |
+| Missing API key | Local provider has no key requirement. |
+| Unknown provider | Falls back to local provider. |
+
+## Security
+
+- All AI endpoints require authentication (`protect` middleware).
+- Students can only access AI analysis for their own complaints.
+- Technicians can only access AI analysis for complaints assigned to them.
+- Admin/Warden can access any complaint's AI analysis.
+- No API keys are committed to source control.
+- AI cannot modify complaint status, priority, ownership, or assignments.
+- AI-generated content is treated as display-only recommendations.
+
+## Limitations
+
+- The local rule-based provider uses keyword matching, not ML/NLP.
+- Duplicate detection uses crude word overlap, not semantic similarity or embeddings.
+- ETA estimates are static category/priority lookups, not trained on historical data.
+- Suggestions are pre-written templates, not dynamically generated.
+
+## Future Improvements
+
+- Integrate Ollama or OpenAI for natural language understanding.
+- Use text embeddings (e.g., sentence-transformers) for semantic duplicate detection.
+- Train ETA model on actual historical resolution times.
+- Add feedback loop: staff can rate AI recommendations to improve accuracy.
+- Cache embeddings for performance.

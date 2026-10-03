@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import complaintRoutes from './routes/complaintRoutes.js';
 import assignmentRoutes from './routes/assignmentRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/complaints', complaintRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
+app.use('/api/v1/ai', aiRoutes);
 
 // Error handling
 app.use(notFound);
