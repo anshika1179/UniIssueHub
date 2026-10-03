@@ -4,6 +4,7 @@ import { SocketProvider } from './context/SocketContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './features/auth/Login.jsx';
 import Register from './features/auth/Register.jsx';
+import LandingPage from './features/landing/LandingPage.jsx';
 import ComplaintList from './features/complaints/ComplaintList.jsx';
 import ComplaintForm from './features/complaints/ComplaintForm.jsx';
 import ComplaintDetails from './features/complaints/ComplaintDetails.jsx';
@@ -23,6 +24,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/landing" element={<LandingPage />} />
             
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Dashboard />} />
