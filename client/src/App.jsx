@@ -9,6 +9,7 @@ import ComplaintForm from './features/complaints/ComplaintForm.jsx';
 import ComplaintDetails from './features/complaints/ComplaintDetails.jsx';
 import TechnicianQueue from './features/complaints/TechnicianQueue.jsx';
 import { NotificationBell } from './features/notifications/NotificationUI.jsx';
+import AnalyticsDashboard from './features/analytics/AnalyticsDashboard.jsx';
 
 // ─── Minimal Dashboard ───────────────────────────
 const Dashboard = () => {
@@ -71,6 +72,11 @@ const Dashboard = () => {
                   File New Complaint
                 </Link>
               )}
+              {['admin', 'warden'].includes(user?.role) && (
+                <Link to="/analytics" className="btn-primary text-center">
+                  View Analytics
+                </Link>
+              )}
             </div>
           </div>
 
@@ -114,6 +120,7 @@ function App() {
               <Route path="/complaints/new" element={<ComplaintForm />} />
               <Route path="/complaints/:id" element={<ComplaintDetails />} />
               <Route path="/assignments/my" element={<TechnicianQueue />} />
+              <Route path="/analytics" element={<AnalyticsDashboard />} />
             </Route>
             
             {/* Catch-all */}

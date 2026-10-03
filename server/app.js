@@ -13,6 +13,7 @@ import assignmentRoutes from './routes/assignmentRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/v1/complaints', complaintRoutes);
 app.use('/api/v1/assignments', assignmentRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // Error handling
 app.use(notFound);

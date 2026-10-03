@@ -281,3 +281,19 @@ Forces a fresh AI analysis run and returns the result.
 | PATCH | `/read-all` | Mark all user notifications as read | Yes |
 
 > **Note**: Phases 1–6 endpoints are implemented. Phases 7+ endpoints are planned.
+
+---
+
+### Analytics — `/api/v1/analytics` (Phase 7)
+
+| Method | Endpoint | Description | Auth Required | Role Access |
+|---|---|---|---|---|
+| GET | `/overview` | Get high-level counts | Yes | Admin/Warden |
+| GET | `/categories` | Get category distributions | Yes | Admin/Warden |
+| GET | `/priorities` | Get priority distributions | Yes | Admin/Warden |
+| GET | `/status` | Get status distributions | Yes | Admin/Warden |
+| GET | `/trends` | Get daily complaint trends | Yes | Admin/Warden |
+| GET | `/resolution-time` | Get average resolution hours | Yes | Admin/Warden |
+| GET | `/technicians` | Get technician workloads | Yes | Admin/Warden/Tech |
+
+> **Note**: Phase 7 analytics implemented. Phase 8+ planned.
