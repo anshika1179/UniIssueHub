@@ -207,14 +207,22 @@ UniIssueHub/
 git clone https://github.com/anshika1179/UniIssueHub.git
 cd UniIssueHub
 
-# Install dependencies (when available)
-# npm install
+# Install dependencies
+cd server && npm install
+cd ../client && npm install
 
-# Set up environment variables
-# cp .env.example .env
+# Set up environment variables (the server reads server/.env, NOT a root .env)
+cd ../server
+cp ../.env.example .env
+# then edit server/.env: set MONGODB_URI and a JWT_SECRET (32+ characters)
 
-# Start development servers (when available)
-# npm run dev
+# Start MongoDB (local mongod, or use a MongoDB Atlas URI in MONGODB_URI)
+
+# Terminal 1 - API on http://localhost:5000
+cd server && npm run dev
+
+# Terminal 2 - client on http://localhost:5173 (open exactly this URL, not 127.0.0.1)
+cd client && npm run dev
 ```
 
 ---

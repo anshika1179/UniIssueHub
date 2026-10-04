@@ -22,12 +22,13 @@ function App() {
       <SocketProvider>
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/landing" element={<LandingPage />} />
+            <Route path="/landing" element={<Navigate to="/" replace />} />
             
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/complaints" element={<ComplaintList />} />
               <Route path="/complaints/new" element={<ComplaintForm />} />
               <Route path="/complaints/:id" element={<ComplaintDetails />} />

@@ -91,7 +91,7 @@ const LandingPage = () => {
       {/* Header */}
       <header className="max-w-6xl mx-auto px-5 sm:px-8">
         <div className="flex items-center justify-between py-5 border-b border-sage-200">
-          <Link to="/landing" className="flex items-center gap-2 text-sage-900">
+          <Link to="/" className="flex items-center gap-2 text-sage-900">
             <CapIcon />
             <span className="text-xl font-bold tracking-tight">UniIssueHub</span>
           </Link>

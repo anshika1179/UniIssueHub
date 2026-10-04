@@ -156,7 +156,7 @@ const Dashboard = () => {
           </h1>
         </div>
         <nav className="flex-1 py-6 px-4 space-y-2 relative">
-          <Link to="/" className="flex items-center gap-3 px-4 py-3 bg-[#D3E0C5] text-sage-900 rounded-md font-semibold transition-colors">
+          <Link to="/dashboard" className="flex items-center gap-3 px-4 py-3 bg-[#D3E0C5] text-sage-900 rounded-md font-semibold transition-colors">
             <HomeIcon /> <span className="mt-0.5">Dashboard</span>
           </Link>
           <Link to="/complaints" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors">

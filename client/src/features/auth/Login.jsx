@@ -62,7 +62,7 @@ const Login = () => {
     setLoading(true);
     try {
       await login({ email: form.email, password: form.password });
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       setError(err?.message || 'An error occurred. Please try again.');
     } finally {
