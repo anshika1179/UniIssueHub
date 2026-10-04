@@ -213,8 +213,9 @@ cd ../client && npm install
 
 # Set up environment variables (the server reads server/.env, NOT a root .env)
 cd ../server
-cp ../.env.example .env
+cp .env.example .env
 # then edit server/.env: set MONGODB_URI and a JWT_SECRET (32+ characters)
+# Email: SMTP_* values are prefilled for uniissuehub@gmail.com; add its Google app password as SMTP_PASSWORD (optional, emails are skipped without it)
 
 # Start MongoDB (local mongod, or use a MongoDB Atlas URI in MONGODB_URI)
 
@@ -237,14 +238,16 @@ cd client && npm run dev
 | `JWT_REFRESH_SECRET` | JWT refresh token secret |
 | `JWT_EXPIRE` | Access token expiry (e.g., 15m) |
 | `JWT_REFRESH_EXPIRE` | Refresh token expiry (e.g., 7d) |
-| `EMAIL_HOST` | SMTP host |
-| `EMAIL_PORT` | SMTP port |
-| `EMAIL_USER` | SMTP username |
-| `EMAIL_PASS` | SMTP password |
+| `SMTP_HOST` | SMTP host (`smtp.gmail.com` for Gmail) |
+| `SMTP_PORT` | SMTP port (`587`) |
+| `SMTP_SECURE` | `false` for port 587 (STARTTLS) |
+| `SMTP_USER` | SMTP username / sender Gmail (`uniissuehub@gmail.com`) |
+| `SMTP_PASSWORD` | Google app password for that Gmail (not the normal password); keep it in `server/.env` only |
+| `SMTP_FROM` | From address (same Gmail) |
 | `CLIENT_URL` | Frontend URL (e.g., http://localhost:5173) |
 | `NODE_ENV` | Environment (development/production) |
 
-See [`.env.example`](.env.example) for the full template.
+See [`server/.env.example`](server/.env.example) for the full template.
 
 ---
 
@@ -577,3 +580,4 @@ Checklist:
 - [ ] Production cookies
 - [ ] Domain configuration
 - [ ] Final production testing
+
