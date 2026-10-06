@@ -36,6 +36,7 @@ export const createNotification = async ({ recipientId, type, title, message, co
     try {
       const io = getIO();
       io.to(`user:${recipientId}`).emit('notification:new', {
+        _id: notification._id,
         id: notification._id,
         type: notification.type,
         title: notification.title,

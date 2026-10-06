@@ -22,7 +22,19 @@ export const initSocket = (server) => {
     try {
       // Allow token via auth object or cookie parser could be integrated, 
       // but standard is sending token in handshake auth for socket
-      const token = socket.handshake.auth.token;
+      let token = socket.handshake.auth && socket.handshake.auth.token;
+
+      // Browser clients use an httpOnly "token" cookie (set by authController),
+      // so fall back to reading it from the handshake headers.
+      if (!token) {
+        const rawCookie = socket.handshake.headers.cookie || '';
+        const match = rawCookie
+          .split(';')
+          .map((c) => c.trim())
+          .find((c) => c.startsWith('token='));
+        if (match) token = decodeURIComponent(match.slice('token='.length));
+      }
+
       if (!token) return next(new Error('Authentication error'));
 
       const decoded = jwt.verify(token, config.jwtSecret);
