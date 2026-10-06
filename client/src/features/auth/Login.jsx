@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 
+// Demo credentials already used by server/test-phase4.js and later phase tests.
+// The selector only fills the form; the server still authenticates the account.
+const DEMO_ACCOUNTS = {
+  admin: { label: 'Admin', email: 'admin_p4@uni.com', password: 'Secure123!' },
+  technician: { label: 'Technician', email: 'tech_p4@uni.com', password: 'Secure123!' },
+  warden: { label: 'Warden', email: 'warden_p4@uni.com', password: 'Secure123!' },
+  student: { label: 'Student', email: 'bob@uni.com', password: 'Secure123!' },
+};
+
 // Inline Icons
 const MailIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,6 +53,7 @@ const GoogleIcon = () => (
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
+  const [selectedRole, setSelectedRole] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +63,15 @@ const Login = () => {
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setError('');
+  };
+
+  const handleRoleChange = (e) => {
+    const role = e.target.value;
+    const account = DEMO_ACCOUNTS[role];
+    setSelectedRole(role);
+    setForm(account ? { email: account.email, password: account.password } : { email: '', password: '' });
+    setShowPassword(false);
     setError('');
   };
 
@@ -75,7 +94,7 @@ const Login = () => {
   };
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden flex items-center justify-center p-4">
+    <div className="relative min-h-screen w-full overflow-x-hidden flex items-center justify-center p-4">
       {/* Blurred Background Layer */}
       <div 
         className="absolute inset-0 bg-cover bg-center blur-sm transform scale-105"
@@ -106,6 +125,24 @@ const Login = () => {
           )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
+            <div>
+              <label htmlFor="demo-role" className="block text-sm font-bold text-dark mb-1.5">
+                Role
+              </label>
+              <select
+                id="demo-role"
+                name="demo-role"
+                value={selectedRole}
+                onChange={handleRoleChange}
+                disabled={loading}
+                className="w-full px-3 py-3 rounded-lg border border-sage-300 bg-[#f8f5eb] text-dark focus:outline-none focus:ring-2 focus:ring-sage-600 focus:bg-white transition-colors duration-200 disabled:opacity-70"
+              >
+                <option value="">Use my own account</option>
+                {Object.entries(DEMO_ACCOUNTS).map(([role, account]) => (
+                  <option key={role} value={role}>{account.label}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label htmlFor="email" className="block text-sm font-bold text-dark mb-1.5">
                 Email address
