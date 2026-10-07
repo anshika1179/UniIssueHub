@@ -137,7 +137,7 @@ const Login = () => {
                 disabled={loading}
                 className="w-full px-3 py-3 rounded-lg border border-sage-300 bg-[#f8f5eb] text-dark focus:outline-none focus:ring-2 focus:ring-sage-600 focus:bg-white transition-colors duration-200 disabled:opacity-70"
               >
-                <option value="">Use my own account</option>
+                <option value="" disabled>Select role</option>
                 {Object.entries(DEMO_ACCOUNTS).map(([role, account]) => (
                   <option key={role} value={role}>{account.label}</option>
                 ))}
