@@ -1,6 +1,10 @@
 import { useState } from 'react';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
 
 // Demo credentials already used by server/test-phase4.js and later phase tests.
 // The selector only fills the form; the server still authenticates the account.
@@ -58,7 +62,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -91,6 +95,23 @@ const Login = () => {
 
   const handleGoogleLogin = () => {
     setError('Google login is not yet configured in this environment.');
+  };
+
+  const handleGoogleSuccess = async ({ credential }) => {
+    if (!credential) {
+      setError('Google did not return a sign-in credential. Please try again.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await googleLogin(credential);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err?.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -231,6 +252,23 @@ const Login = () => {
             <span className="h-px bg-sage-300 w-full"></span>
           </div>
 
+          {googleClientId ? (
+            <GoogleOAuthProvider clientId={googleClientId}>
+              <div className="mt-6 flex justify-center" aria-busy={loading}>
+                {loading ? (
+                  <p className="text-sm text-sage-700" role="status">Signing in...</p>
+                ) : (
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => setError('Google sign-in failed. Please try again.')}
+                    text="continue_with"
+                    shape="rectangular"
+                    size="large"
+                  />
+                )}
+              </div>
+            </GoogleOAuthProvider>
+          ) : (
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -239,6 +277,7 @@ const Login = () => {
             <GoogleIcon />
             Continue with Google
           </button>
+          )}
           
           <div className="mt-8 text-center">
             <p className="text-sm font-medium text-dark-50">

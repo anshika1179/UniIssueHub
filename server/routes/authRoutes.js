@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, logout, getMe } from '../controllers/authController.js';
+import { register, login, googleLogin, logout, getMe } from '../controllers/authController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 import { authLimiter } from '../middleware/authRateLimiter.js';
@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
+router.post('/google', authLimiter, googleLogin);
 router.post('/logout', protect, logout);
 router.get('/me', protect, getMe);
 

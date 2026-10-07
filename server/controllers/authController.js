@@ -1,10 +1,13 @@
 import User from '../models/User.js';
+import { OAuth2Client } from 'google-auth-library';
+import { randomBytes } from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import config from '../config/config.js';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const googleClient = new OAuth2Client();
 
 const validateRegisterInput = ({ name, email, password }) => {
   if (!name || name.trim().length < 2) {
@@ -105,6 +108,85 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const googleLogin = async (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
+  if (!clientId) {
+    return res.status(503).json({ success: false, message: 'Google login is not configured on the server.' });
+  }
+  const { credential } = req.body;
+  if (typeof credential !== 'string' || !credential.trim()) {
+    return res.status(400).json({ success: false, message: 'Please provide a Google sign-in credential.' });
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: clientId });
+    payload = ticket.getPayload();
+  } catch {
+    return res.status(401).json({ success: false, message: 'Invalid or expired Google credential. Please try again.' });
+  }
+  if (!payload?.sub || payload.email_verified !== true || !EMAIL_REGEX.test(payload.email || '')) {
+    return res.status(401).json({ success: false, message: 'Google must verify your email before you can sign in.' });
+  }
+
+  try {
+    const email = payload.email.toLowerCase();
+    let user = await User.findOne({ googleId: payload.sub }).select('+googleId');
+    if (!user) {
+      user = await User.findOne({ email }).select('+googleId');
+      if (user) {
+        // Only auto-link when Google is authoritative for the email address.
+        // For third-party email accounts, email_verified alone is not enough.
+        const authoritativeEmail = email.endsWith('@gmail.com') || Boolean(payload.hd);
+        if ((user.googleId && user.googleId !== payload.sub) || !authoritativeEmail) {
+          return res.status(401).json({ success: false, message: 'Please sign in to this account with your email and password.' });
+        }
+      } else {
+        user = await User.create({
+          name: payload.name?.trim() || email.split('@')[0],
+          email,
+          // The existing model requires a password; use a random, unknown one.
+          // It is hashed by the same save hook as normal registration.
+          password: randomBytes(32).toString('hex'),
+          googleId: payload.sub,
+          role: 'student', // Never accept a client-supplied role.
+        });
+      }
+    }
+    if (!user.isActive) {
+      return res.status(401).json({ success: false, message: 'This account has been deactivated. Please contact support.' });
+    }
+    if (!user.googleId) {
+      user.googleId = payload.sub;
+      await user.save();
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      config.jwtSecret,
+      { expiresIn: config.jwtExpire }
+    );
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: config.nodeEnv === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+    res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      },
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({ success: false, message: 'Account sign-in changed. Please try again.' });
+    }
+    res.status(500).json({ success: false, message: 'Google sign-in failed. Please try again.' });
   }
 };
 
