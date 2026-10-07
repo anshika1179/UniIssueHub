@@ -1,8 +1,11 @@
 import express from 'express';
+import { validateObjectId, validatePagination } from '../middleware/validateRequest.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { getAnalysis, triggerAnalysis } from '../controllers/aiController.js';
 
 const router = express.Router();
+router.param('complaintId', validateObjectId);
+router.use(validatePagination);
 
 router.use(protect); // All AI routes require auth
 

@@ -1,4 +1,5 @@
 import express from 'express';
+import { validateObjectId, validatePagination, validateTechnicianId } from '../middleware/validateRequest.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 import {
@@ -10,6 +11,8 @@ import {
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
+router.param('id', validateObjectId);
+router.use(validatePagination);
 
 router.use(protect);
 
@@ -20,6 +23,6 @@ router.patch('/:id/start', authorizeRoles('technician'), startAssignment);
 router.patch('/:id/resolve', authorizeRoles('technician'), resolveAssignment);
 
 // Admin / Warden routes
-router.patch('/:id/reassign', authorizeRoles('admin', 'warden'), reassignTechnician);
+router.patch('/:id/reassign', authorizeRoles('admin', 'warden'), validateTechnicianId, reassignTechnician);
 
 export default router;

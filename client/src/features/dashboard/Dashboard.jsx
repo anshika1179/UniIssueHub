@@ -89,7 +89,7 @@ const Dashboard = () => {
   const { user, logout } = useAuth();
   const { unreadCount } = useSocket();
   const [complaints, setComplaints] = useState([]);
-  const [stats, setStats] = useState({ total: 0, pending: 0, inProgress: 0, resolved: 0, closed: 0 });
+  const [stats, setStats] = useState({ total: 0, pending: 0, assigned: 0, inProgress: 0, resolved: 0, closed: 0 });
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   useEffect(() => {
@@ -98,17 +98,14 @@ const Dashboard = () => {
         const res = await complaintService.getComplaints({ limit: 100 });
         const data = res.data || [];
         
-        const counts = { pending: 0, in_progress: 0, resolved: 0, closed: 0 };
-        data.forEach(c => {
-          if (counts[c.status] !== undefined) counts[c.status]++;
-        });
-        
+        const counts = res.pagination?.statusCounts || {};
         setStats({
-          total: data.length,
-          pending: counts.pending,
-          inProgress: counts.in_progress,
-          resolved: counts.resolved,
-          closed: counts.closed
+          total: res.pagination?.total || 0,
+          pending: counts.pending || 0,
+          assigned: counts.assigned || 0,
+          inProgress: counts.in_progress || 0,
+          resolved: counts.resolved || 0,
+          closed: counts.closed || 0
         });
 
         setComplaints(data.slice(0, 5));
@@ -137,6 +134,7 @@ const Dashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'assigned': return 'bg-purple-100 text-purple-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'resolved': return 'bg-green-100 text-green-800';
@@ -162,6 +160,11 @@ const Dashboard = () => {
           <Link to="/complaints" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors">
             <ListIcon /> <span className="mt-0.5">Complaints</span>
           </Link>
+          {user?.role === 'technician' && (
+            <Link to="/assignments/my" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors">
+              <ListIcon /> <span className="mt-0.5">My Assignments</span>
+            </Link>
+          )}
           {['admin', 'warden'].includes(user?.role) && (
             <Link to="/analytics" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors">
               <ChartIcon /> <span className="mt-0.5">Analytics</span>
@@ -232,7 +235,7 @@ const Dashboard = () => {
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
               <div className="bg-white rounded-xl border border-sage-200 p-5 shadow-sm flex flex-col">
                 <div className="w-10 h-10 rounded-full bg-sage-100 flex items-center justify-center text-sage-700 mb-4">
                   <DocIcon />
@@ -249,6 +252,12 @@ const Dashboard = () => {
                 <div className="text-xs text-dark-50 uppercase tracking-wide font-medium mt-1">Pending</div>
               </div>
               
+              <div className="bg-white rounded-xl border border-sage-200 p-5 shadow-sm flex flex-col">
+                <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center text-purple-700 mb-4"><ListIcon /></div>
+                <div className="text-3xl font-bold text-dark">{stats.assigned}</div>
+                <div className="text-xs text-dark-50 uppercase tracking-wide font-medium mt-1">Assigned</div>
+              </div>
+
               <div className="bg-white rounded-xl border border-sage-200 p-5 shadow-sm flex flex-col">
                 <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-500 mb-4">
                   <RefreshIcon />

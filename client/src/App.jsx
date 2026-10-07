@@ -4,6 +4,7 @@ import { SocketProvider } from './context/SocketContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './features/auth/Login.jsx';
 import Register from './features/auth/Register.jsx';
+import PolicyPage from './pages/PolicyPage.jsx';
 import LandingPage from './features/landing/LandingPage.jsx';
 import ComplaintList from './features/complaints/ComplaintList.jsx';
 import ComplaintForm from './features/complaints/ComplaintForm.jsx';
@@ -25,6 +26,8 @@ function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/terms" element={<PolicyPage type="terms" />} />
+            <Route path="/privacy" element={<PolicyPage type="privacy" />} />
             <Route path="/landing" element={<Navigate to="/" replace />} />
             
             <Route element={<ProtectedRoute />}>
@@ -32,8 +35,12 @@ function App() {
               <Route path="/complaints" element={<ComplaintList />} />
               <Route path="/complaints/new" element={<ComplaintForm />} />
               <Route path="/complaints/:id" element={<ComplaintDetails />} />
-              <Route path="/assignments/my" element={<TechnicianQueue />} />
-              <Route path="/analytics" element={<AnalyticsDashboard />} />
+              <Route element={<ProtectedRoute allowedRoles={['technician']} />}>
+                <Route path="/assignments/my" element={<TechnicianQueue />} />
+              </Route>
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'warden']} />}>
+                <Route path="/analytics" element={<AnalyticsDashboard />} />
+              </Route>
             </Route>
             
             {/* Catch-all */}

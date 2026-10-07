@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
+
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -21,15 +24,6 @@ const LockIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-  </svg>
-);
-
-const UsersIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-    <circle cx="9" cy="7" r="4" />
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 
@@ -58,14 +52,40 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const GoogleSignInButton = ({ onSuccess, onError, loading, beforeLogin }) => {
+  const startGoogleLogin = useGoogleLogin({
+    flow: 'implicit',
+    scope: 'openid email profile',
+    onSuccess,
+    onError,
+    onNonOAuthError: (error) => {
+      if (error.type !== 'popup_closed') onError();
+    },
+  });
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!loading && (!beforeLogin || beforeLogin())) startGoogleLogin();
+      }}
+      aria-busy={loading}
+      className="w-full mt-6 bg-white border border-sage-300 text-dark px-6 py-3.5 rounded-lg text-[15px] font-bold hover:bg-sage-50 transition-colors duration-200 flex justify-center items-center gap-3 focus:outline-none focus:ring-2 focus:ring-sage-600 focus:ring-offset-2 focus:ring-offset-cream"
+    >
+      <GoogleIcon />
+      Continue with Google
+    </button>
+  );
+};
+
 const Register = () => {
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', role: 'student', agreed: false });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', agreed: false });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -96,13 +116,10 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // The backend enforces 'student' role during registration regardless of selection,
-      // but we pass it anyway to reflect the UI state.
       const res = await register({
         name: form.name,
         email: form.email,
-        password: form.password,
-        role: form.role
+        password: form.password
       });
       setSuccess(res.message || 'Registration successful!');
       setTimeout(() => navigate('/login'), 1500);
@@ -113,12 +130,29 @@ const Register = () => {
     }
   };
 
-  const handleGoogleSignup = () => {
-    setError('Google signup is not yet configured in this environment.');
+  const handleGoogleSuccess = async ({ access_token }) => {
+    if (!form.agreed) {
+      setError('You must agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
+    if (!access_token) {
+      setError('Google did not return a sign-in credential. Please try again.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await googleLogin({ accessToken: access_token });
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err?.message || 'Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden flex items-center justify-center p-4">
+    <div className="relative min-h-screen w-full overflow-x-hidden flex items-center justify-center p-4">
       {/* Blurred Background Layer */}
       <div 
         className="absolute inset-0 bg-cover bg-center blur-sm transform scale-105"
@@ -262,32 +296,6 @@ const Register = () => {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-bold text-dark mb-1.5">
-                Role
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sage-600">
-                  <UsersIcon />
-                </div>
-                <select
-                  id="role"
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-sage-300 bg-transparent text-sage-600 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-sage-600 focus:bg-white transition-colors duration-200 font-medium"
-                >
-                  <option value="" disabled hidden>Select your role</option>
-                  <option value="student">Student</option>
-                  <option value="technician">Technician</option>
-                  <option value="warden">Warden</option>
-                  <option value="admin">Admin</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-sage-600 scale-90">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                </div>
-              </div>
-            </div>
 
             <div className="flex items-start mt-4 pt-2">
               <div className="flex items-center h-5">
@@ -302,7 +310,7 @@ const Register = () => {
               </div>
               <div className="ml-2 text-[14px] font-medium leading-tight">
                 <label htmlFor="agreed" className="text-dark">
-                  I agree to the <a href="#" className="text-sage-800 hover:underline">Terms of Service</a> and <a href="#" className="text-sage-800 hover:underline">Privacy Policy</a>
+                  I agree to the <Link to="/terms" target="_blank" rel="noopener noreferrer" className="text-sage-800 hover:underline">Terms of Service</Link> and <Link to="/privacy" target="_blank" rel="noopener noreferrer" className="text-sage-800 hover:underline">Privacy Policy</Link>
                 </label>
               </div>
             </div>
@@ -322,14 +330,32 @@ const Register = () => {
             <span className="h-px bg-sage-300 w-full"></span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleGoogleSignup}
-            className="w-full mt-6 bg-white border border-sage-300 text-dark px-6 py-3.5 rounded-lg text-[15px] font-bold hover:bg-sage-50 transition-colors duration-200 flex justify-center items-center gap-3 focus:outline-none focus:ring-2 focus:ring-sage-600 focus:ring-offset-2 focus:ring-offset-cream"
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
+          {googleClientId ? (
+            <GoogleOAuthProvider clientId={googleClientId}>
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google sign-in failed. Please try again.')}
+                loading={loading}
+                beforeLogin={() => {
+                  if (!form.agreed) {
+                    setError('You must agree to the Terms of Service and Privacy Policy.');
+                    return false;
+                  }
+                  return true;
+                }}
+              />
+            </GoogleOAuthProvider>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setError('Google sign-in needs VITE_GOOGLE_CLIENT_ID in client/.env.')}
+              className="w-full mt-6 bg-white border border-sage-300 text-dark px-6 py-3.5 rounded-lg text-[15px] font-bold hover:bg-sage-50 transition-colors duration-200 flex justify-center items-center gap-3 focus:outline-none focus:ring-2 focus:ring-sage-600 focus:ring-offset-2 focus:ring-offset-cream"
+            >
+              <GoogleIcon />
+              Continue with Google
+            </button>
+          )}
+          {!googleClientId && <p className="mt-2 text-xs text-sage-700 text-center">Google sign-in needs VITE_GOOGLE_CLIENT_ID in client/.env.</p>}
 
           <div className="mt-8 text-center">
             <p className="text-[14px] font-medium text-dark-50">

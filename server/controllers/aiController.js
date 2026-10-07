@@ -20,7 +20,7 @@ export const getAnalysis = async (req, res) => {
       const isAssigned = await Assignment.findOne({
         complaintId,
         technicianId: req.user._id,
-        status: { $in: ['assigned', 'accepted', 'in_progress'] }
+        status: { $ne: 'cancelled' }
       });
       if (!isAssigned) {
          return res.status(403).json({ success: false, message: 'Not assigned to this complaint.' });
@@ -52,7 +52,7 @@ export const triggerAnalysis = async (req, res) => {
     }
 
     if (req.user.role === 'technician') {
-      const isAssigned = await Assignment.findOne({ complaintId, technicianId: req.user._id });
+      const isAssigned = await Assignment.findOne({ complaintId, technicianId: req.user._id, status: { $ne: 'cancelled' } });
       if (!isAssigned) return res.status(403).json({ success: false, message: 'Not assigned.' });
     }
 

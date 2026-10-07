@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -55,6 +55,32 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const GoogleSignInButton = ({ onSuccess, onError, loading, beforeLogin }) => {
+  const startGoogleLogin = useGoogleLogin({
+    flow: 'implicit',
+    scope: 'openid email profile',
+    onSuccess,
+    onError,
+    onNonOAuthError: (error) => {
+      if (error.type !== 'popup_closed') onError();
+    },
+  });
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (!loading && (!beforeLogin || beforeLogin())) startGoogleLogin();
+      }}
+      aria-busy={loading}
+      className="w-full mt-6 bg-white border border-sage-300 text-dark px-6 py-3.5 rounded-lg font-bold hover:bg-sage-50 transition-colors duration-200 flex justify-center items-center gap-3 focus:outline-none focus:ring-2 focus:ring-sage-600 focus:ring-offset-2 focus:ring-offset-cream"
+    >
+      <GoogleIcon />
+      Continue with Google
+    </button>
+  );
+};
+
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [selectedRole, setSelectedRole] = useState('');
@@ -94,18 +120,18 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    setError('Google login is not yet configured in this environment.');
+    setError('Google sign-in needs VITE_GOOGLE_CLIENT_ID in client/.env.');
   };
 
-  const handleGoogleSuccess = async ({ credential }) => {
-    if (!credential) {
+  const handleGoogleSuccess = async ({ access_token }) => {
+    if (!access_token) {
       setError('Google did not return a sign-in credential. Please try again.');
       return;
     }
     setError('');
     setLoading(true);
     try {
-      await googleLogin(credential);
+      await googleLogin({ accessToken: access_token });
       navigate('/dashboard');
     } catch (err) {
       setError(err?.message || 'Google sign-in failed. Please try again.');
@@ -231,9 +257,7 @@ const Login = () => {
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-bold text-sage-800 hover:text-sage-900 hover:underline">
-                  Forgot password?
-                </a>
+                <span className="text-xs text-sage-700">Password help? Contact your campus admin.</span>
               </div>
             </div>
 
@@ -254,31 +278,24 @@ const Login = () => {
 
           {googleClientId ? (
             <GoogleOAuthProvider clientId={googleClientId}>
-              <div className="mt-6 flex justify-center" aria-busy={loading}>
-                {loading ? (
-                  <p className="text-sm text-sage-700" role="status">Signing in...</p>
-                ) : (
-                  <GoogleLogin
-                    onSuccess={handleGoogleSuccess}
-                    onError={() => setError('Google sign-in failed. Please try again.')}
-                    text="continue_with"
-                    shape="rectangular"
-                    size="large"
-                  />
-                )}
-              </div>
+              <GoogleSignInButton
+                onSuccess={handleGoogleSuccess}
+                onError={() => setError('Google sign-in failed. Please try again.')}
+                loading={loading}
+              />
             </GoogleOAuthProvider>
           ) : (
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="w-full mt-6 bg-white border border-sage-300 text-dark px-6 py-3.5 rounded-lg font-bold hover:bg-sage-50 transition-colors duration-200 flex justify-center items-center gap-3 focus:outline-none focus:ring-2 focus:ring-sage-600 focus:ring-offset-2 focus:ring-offset-cream"
-          >
-            <GoogleIcon />
-            Continue with Google
-          </button>
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full mt-6 bg-white border border-sage-300 text-dark px-6 py-3.5 rounded-lg font-bold hover:bg-sage-50 transition-colors duration-200 flex justify-center items-center gap-3 focus:outline-none focus:ring-2 focus:ring-sage-600 focus:ring-offset-2 focus:ring-offset-cream"
+            >
+              <GoogleIcon />
+              Continue with Google
+            </button>
           )}
-          
+          {!googleClientId && <p className="mt-2 text-xs text-sage-700 text-center">Google sign-in needs VITE_GOOGLE_CLIENT_ID in client/.env.</p>}
+
           <div className="mt-8 text-center">
             <p className="text-sm font-medium text-dark-50">
               New to UniIssueHub?{' '}

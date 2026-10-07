@@ -1,4 +1,5 @@
 import Complaint from '../models/Complaint.js';
+import Assignment from '../models/Assignment.js';
 import ComplaintHistory from '../models/ComplaintHistory.js';
 import Counter from '../models/Counter.js';
 import { analyzeComplaint } from '../services/ai/aiService.js';
@@ -89,6 +90,9 @@ export const getComplaints = async (req, res) => {
     // Ownership enforcement
     if (req.user.role === 'student') {
       query.studentId = req.user._id;
+    } else if (req.user.role === 'technician') {
+      const complaintIds = await Assignment.distinct('complaintId', { technicianId: req.user._id, status: { $ne: 'cancelled' } });
+      query._id = { $in: complaintIds };
     }
 
     if (status) query.status = status;
@@ -99,6 +103,11 @@ export const getComplaints = async (req, res) => {
     const skip = (Math.max(parseInt(page), 1) - 1) * limitNum;
 
     const total = await Complaint.countDocuments(query);
+    const grouped = await Complaint.aggregate([
+      { $match: query },
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    const statusCounts = Object.fromEntries(grouped.map(({ _id, count }) => [_id, count]));
     const complaints = await Complaint.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -112,7 +121,8 @@ export const getComplaints = async (req, res) => {
         page: parseInt(page),
         limit: limitNum,
         total,
-        totalPages: Math.ceil(total / limitNum)
+        totalPages: Math.ceil(total / limitNum),
+        statusCounts
       }
     });
   } catch (error) {
@@ -126,6 +136,10 @@ export const getComplaint = async (req, res) => {
     
     if (!complaint) {
       return res.status(404).json({ success: false, message: 'Complaint not found.' });
+    }
+
+    if (req.user.role === 'technician' && !await Assignment.exists({ complaintId: complaint._id, technicianId: req.user._id, status: { $ne: 'cancelled' } })) {
+      return res.status(403).json({ success: false, message: 'Not assigned to this complaint.' });
     }
 
     // Ownership check
@@ -145,6 +159,10 @@ export const getComplaintHistory = async (req, res) => {
     
     if (!complaint) {
       return res.status(404).json({ success: false, message: 'Complaint not found.' });
+    }
+
+    if (req.user.role === 'technician' && !await Assignment.exists({ complaintId: complaint._id, technicianId: req.user._id, status: { $ne: 'cancelled' } })) {
+      return res.status(403).json({ success: false, message: 'Not assigned to this complaint.' });
     }
 
     // Ownership check

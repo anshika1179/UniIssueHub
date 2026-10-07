@@ -116,15 +116,36 @@ export const googleLogin = async (req, res) => {
   if (!clientId) {
     return res.status(503).json({ success: false, message: 'Google login is not configured on the server.' });
   }
-  const { credential } = req.body;
-  if (typeof credential !== 'string' || !credential.trim()) {
+  const { credential, accessToken } = req.body;
+  if ((typeof credential !== 'string' || !credential.trim()) && (typeof accessToken !== 'string' || !accessToken.trim())) {
     return res.status(400).json({ success: false, message: 'Please provide a Google sign-in credential.' });
   }
 
   let payload;
   try {
-    const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: clientId });
-    payload = ticket.getPayload();
+    if (typeof accessToken === 'string' && accessToken.trim()) {
+      // Never trust a profile supplied by the browser. Verify the token with Google
+      // and bind it to this OAuth client before requesting the account's profile.
+      const infoResponse = await fetch(
+        `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (!infoResponse.ok) throw new Error('Invalid Google access token');
+      const info = await infoResponse.json();
+      if (info.aud !== clientId || !info.sub || !Number.isFinite(Number(info.expires_in)) || Number(info.expires_in) <= 0) {
+        throw new Error('Wrong audience or expired Google access token');
+      }
+      const profileResponse = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!profileResponse.ok) throw new Error('Invalid Google profile');
+      payload = await profileResponse.json();
+      if (payload.sub !== info.sub) throw new Error('Google account mismatch');
+    } else {
+      const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: clientId });
+      payload = ticket.getPayload();
+    }
   } catch {
     return res.status(401).json({ success: false, message: 'Invalid or expired Google credential. Please try again.' });
   }

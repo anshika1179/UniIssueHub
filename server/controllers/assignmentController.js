@@ -67,7 +67,7 @@ export const getAssignment = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized.' });
     }
 
-    const assignments = await Assignment.find({ complaintId })
+    const assignments = await Assignment.find({ complaintId, ...(req.user.role === 'technician' ? { technicianId: req.user._id, status: { $ne: 'cancelled' } } : {}) })
       .populate('technicianId', 'name email')
       .populate('assignedBy', 'name role')
       .sort({ createdAt: -1 });
@@ -118,7 +118,7 @@ export const getMyAssignments = async (req, res) => {
 export const acceptAssignment = async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id);
-    if (!assignment) throw new Error('Assignment not found.');
+    if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found.' });
     if (assignment.technicianId.toString() !== req.user._id.toString()) throw new Error('Not your assignment.');
     if (assignment.status !== 'assigned') throw new Error('Assignment cannot be accepted in its current state.');
 
@@ -155,7 +155,7 @@ export const acceptAssignment = async (req, res) => {
 export const startAssignment = async (req, res) => {
   try {
     const assignment = await Assignment.findById(req.params.id);
-    if (!assignment) throw new Error('Assignment not found.');
+    if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found.' });
     if (assignment.technicianId.toString() !== req.user._id.toString()) throw new Error('Not your assignment.');
     if (assignment.status !== 'accepted') throw new Error('Assignment must be accepted before starting.');
 
@@ -198,7 +198,7 @@ export const resolveAssignment = async (req, res) => {
     if (!resolutionNotes || resolutionNotes.trim().length === 0) throw new Error('Resolution notes are required.');
 
     const assignment = await Assignment.findById(req.params.id);
-    if (!assignment) throw new Error('Assignment not found.');
+    if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found.' });
     if (assignment.technicianId.toString() !== req.user._id.toString()) throw new Error('Not your assignment.');
     if (assignment.status !== 'in_progress') throw new Error('Assignment must be in progress to resolve.');
 
@@ -243,7 +243,7 @@ export const reassignTechnician = async (req, res) => {
     const { technicianId } = req.body;
 
     const oldAssignment = await Assignment.findById(assignmentId);
-    if (!oldAssignment) throw new Error('Assignment not found.');
+    if (!oldAssignment) return res.status(404).json({ success: false, message: 'Assignment not found.' });
     if (['completed', 'cancelled'].includes(oldAssignment.status)) throw new Error('Cannot reassign a completed or cancelled assignment.');
 
     const complaint = await Complaint.findById(oldAssignment.complaintId);

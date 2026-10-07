@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import assignmentService from '../../services/assignmentService.js';
 import api from '../../services/api.js';
@@ -15,21 +15,15 @@ const AssignmentPanel = ({ complaint, onUpdate }) => {
   const isStaff = ['admin', 'warden'].includes(user?.role);
   const isTechnician = user?.role === 'technician';
 
-  useEffect(() => {
-    const loadAssignment = async () => {
-      try {
-        const res = await assignmentService.getAssignment(complaint._id);
-        if (res.data && res.data.length > 0) {
-          // get the most recent active assignment
-          const active = res.data.find(a => ['assigned', 'accepted', 'in_progress', 'completed'].includes(a.status));
-          if (active) setAssignment(active);
-        }
-      } catch (err) {
-        // usually means none found or unauthorized
-      }
-    };
-    loadAssignment();
+  const loadAssignment = useCallback(async () => {
+    const res = await assignmentService.getAssignment(complaint._id);
+    const active = (res.data || []).find(a => ['assigned', 'accepted', 'in_progress', 'completed'].includes(a.status));
+    setAssignment(active || null);
   }, [complaint._id]);
+
+  useEffect(() => {
+    loadAssignment().catch(() => setAssignment(null));
+  }, [loadAssignment, complaint.status]);
 
   useEffect(() => {
     if (isStaff && ['pending', 'assigned'].includes(complaint.status)) {
@@ -51,7 +45,8 @@ const AssignmentPanel = ({ complaint, onUpdate }) => {
     try {
       if (payload) await actionFn(payload);
       else await actionFn();
-      onUpdate();
+      await loadAssignment();
+      await onUpdate();
     } catch (err) {
       setError(err?.message || 'Action failed.');
     } finally {

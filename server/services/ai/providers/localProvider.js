@@ -62,7 +62,7 @@ export const analyzeSentiment = async (title, description) => {
   return { sentiment, urgency, confidence: 0.75 };
 };
 
-export const detectDuplicates = async (title, description, category, location) => {
+export const detectDuplicates = async (title, description, category, location, complaintId) => {
   // Simple MongoDB text search or regex based similarity fallback
   // In a real app we'd use vector embeddings. Here we do a crude word match.
   const words = title.toLowerCase().split(' ').filter(w => w.length > 4);
@@ -73,6 +73,7 @@ export const detectDuplicates = async (title, description, category, location) =
 
   // Find recent complaints in same category/location
   const recentComplaints = await Complaint.find({
+    ...(complaintId ? { _id: { $ne: complaintId } } : {}),
     category,
     status: { $nin: ['closed', 'rejected'] }
   }).sort({ createdAt: -1 }).limit(10);

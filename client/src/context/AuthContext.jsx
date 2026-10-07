@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const googleLogin = async (credential) => {
-    const res = await api.post('/auth/google', { credential });
+    const res = await api.post('/auth/google', typeof credential === 'string' ? { credential } : credential);
     if (!res.success || !res.data?.user) {
       throw new Error(res.message || 'Google sign-in failed.');
     }

@@ -31,7 +31,7 @@ export const analyzeComplaint = async (complaintId) => {
       provider.categorize(complaint.title, complaint.description),
       provider.recommendPriority(complaint.title, complaint.description, complaint.category),
       provider.analyzeSentiment(complaint.title, complaint.description),
-      provider.detectDuplicates(complaint.title, complaint.description, complaint.category, complaint.location),
+      provider.detectDuplicates(complaint.title, complaint.description, complaint.category, complaint.location, complaint._id),
       provider.estimateEta(complaint.category, complaint.priority),
       provider.generateSuggestions(complaint.category, complaint.priority)
     ]);
