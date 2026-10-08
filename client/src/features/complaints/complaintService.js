@@ -1,8 +1,12 @@
 import api from '../../services/api.js';
 
 const complaintService = {
-  createComplaint: async (data) => {
-    return await api.post('/complaints', data);
+  createComplaint: async (data, image) => {
+    if (!image) return await api.post('/complaints', data);
+    const body = new FormData();
+    Object.entries(data).forEach(([key, value]) => body.append(key, value));
+    body.append('image', image);
+    return await api.post('/complaints', body);
   },
   
   getComplaints: async (params = {}) => {

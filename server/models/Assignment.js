@@ -44,5 +44,12 @@ const assignmentSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// MongoDB 6+ supports $in in partial filters. Completed/cancelled rows remain history.
+assignmentSchema.index({ complaintId: 1 }, {
+  unique: true,
+  name: 'one_active_assignment_per_complaint',
+  partialFilterExpression: { status: { $in: ['assigned', 'accepted', 'in_progress'] } }
+});
+
 const Assignment = mongoose.model('Assignment', assignmentSchema);
 export default Assignment;

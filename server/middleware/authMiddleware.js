@@ -12,7 +12,7 @@ export const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, config.jwtSecret);
     const user = await User.findById(decoded.id);
 
-    if (!user || !user.isActive) {
+    if (!user || !user.isActive || user.roleApproval === 'pending') {
       return res.status(401).json({ success: false, message: 'Not authorized or inactive user' });
     }
 

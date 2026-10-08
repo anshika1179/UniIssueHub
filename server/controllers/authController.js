@@ -8,6 +8,8 @@ import config from '../config/config.js';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const googleClient = new OAuth2Client();
+const SIGNUP_ROLES = ['student', 'warden', 'technician', 'admin'];
+const PENDING_MESSAGE = 'Your account is pending. An admin must assign your role before you can sign in.';
 
 const validateRegisterInput = ({ name, email, password }) => {
   if (!name || name.trim().length < 2) {
@@ -26,7 +28,8 @@ const validateRegisterInput = ({ name, email, password }) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, rollNumber, department, hostel } = req.body;
+    const { name, email, password, rollNumber, department, hostel, role = 'student' } = req.body;
+    if (!SIGNUP_ROLES.includes(role)) return res.status(400).json({ success: false, message: 'Invalid requested role.' });
 
     // Server-side validation
     const validationError = validateRegisterInput({ name, email, password });
@@ -43,13 +46,15 @@ export const register = async (req, res) => {
       name: name.trim(),
       email: email.toLowerCase(),
       password,
-      role: 'student', // Always forced — never trust client role
+      role: 'student', // Privileges are assigned only by an admin.
+      requestedRole: role,
+      roleApproval: role === 'student' ? 'approved' : 'pending',
       rollNumber,
       department,
       hostel,
     });
 
-    res.status(201).json({ success: true, message: 'Registration successful. You can now login.' });
+    res.status(201).json({ success: true, message: role === 'student' ? 'Registration successful. You can now login.' : PENDING_MESSAGE });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -79,6 +84,10 @@ export const login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    if (user.roleApproval === 'pending') {
+      return res.status(403).json({ success: false, message: PENDING_MESSAGE });
     }
 
     const token = jwt.sign(
@@ -116,7 +125,8 @@ export const googleLogin = async (req, res) => {
   if (!clientId) {
     return res.status(503).json({ success: false, message: 'Google login is not configured on the server.' });
   }
-  const { credential, accessToken } = req.body;
+  const { credential, accessToken, role = 'student' } = req.body;
+  if (!SIGNUP_ROLES.includes(role)) return res.status(400).json({ success: false, message: 'Invalid requested role.' });
   if ((typeof credential !== 'string' || !credential.trim()) && (typeof accessToken !== 'string' || !accessToken.trim())) {
     return res.status(400).json({ success: false, message: 'Please provide a Google sign-in credential.' });
   }
@@ -173,7 +183,9 @@ export const googleLogin = async (req, res) => {
           // It is hashed by the same save hook as normal registration.
           password: randomBytes(32).toString('hex'),
           googleId: payload.sub,
-          role: 'student', // Never accept a client-supplied role.
+          role: 'student', // Never grant privileges during signup.
+          requestedRole: role,
+          roleApproval: role === 'student' ? 'approved' : 'pending',
         });
       }
     }
@@ -183,6 +195,10 @@ export const googleLogin = async (req, res) => {
     if (!user.googleId) {
       user.googleId = payload.sub;
       await user.save();
+    }
+
+    if (user.roleApproval === 'pending') {
+      return res.status(403).json({ success: false, message: PENDING_MESSAGE });
     }
 
     const token = jwt.sign(

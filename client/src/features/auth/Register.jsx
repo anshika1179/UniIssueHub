@@ -79,7 +79,7 @@ const GoogleSignInButton = ({ onSuccess, onError, loading, beforeLogin }) => {
 };
 
 const Register = () => {
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', agreed: false });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', role: 'student', agreed: false });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -119,7 +119,8 @@ const Register = () => {
       const res = await register({
         name: form.name,
         email: form.email,
-        password: form.password
+        password: form.password,
+        role: form.role
       });
       setSuccess(res.message || 'Registration successful!');
       setTimeout(() => navigate('/login'), 1500);
@@ -142,7 +143,7 @@ const Register = () => {
     setError('');
     setLoading(true);
     try {
-      await googleLogin({ accessToken: access_token });
+      await googleLogin({ accessToken: access_token, role: form.role });
       navigate('/dashboard');
     } catch (err) {
       setError(err?.message || 'Google sign-in failed. Please try again.');
@@ -189,6 +190,13 @@ const Register = () => {
           )}
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            <div>
+              <label htmlFor="role" className="block text-sm font-bold text-dark mb-1.5">Account role</label>
+              <select id="role" name="role" value={form.role} onChange={handleChange} className="input-field capitalize">
+                {['student', 'warden', 'technician', 'admin'].map(role => <option key={role} value={role}>{role}</option>)}
+              </select>
+              {form.role !== 'student' && <p className="text-xs text-sage-700 mt-1">An admin must assign your role before you can sign in.</p>}
+            </div>
             <div>
               <label htmlFor="name" className="block text-sm font-bold text-dark mb-1.5">
                 Full name

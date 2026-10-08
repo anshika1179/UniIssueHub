@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import complaintService from './complaintService.js';
 import AssignmentPanel from './AssignmentPanel.jsx';
 import AIInsights from './AIInsights.jsx';
+import api from '../../services/api.js';
 
 const ComplaintDetails = () => {
   const { id } = useParams();
@@ -57,6 +58,10 @@ const ComplaintDetails = () => {
             <div className="prose prose-sm text-dark mb-6">
               <p className="whitespace-pre-wrap">{complaint.description}</p>
             </div>
+            {(complaint.attachments || []).filter(name => /^[a-f0-9-]{36}\.jpg$/.test(name)).map(name => <div key={name} className="mt-4">
+              <h2 className="text-sm font-medium text-dark mb-2">Complaint image</h2>
+              <img src={`${api.defaults.baseURL}/complaints/${complaint._id}/images/${name}`} alt="Image submitted with this complaint" className="w-full max-h-96 object-contain rounded-md border border-sage-200" />
+            </div>)}
           </div>
         </div>
 

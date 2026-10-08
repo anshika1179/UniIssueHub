@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
     enum: ['student', 'admin', 'warden', 'technician'], 
     default: 'student' 
   },
+  requestedRole: { type: String, enum: ['student', 'admin', 'warden', 'technician'] },
+  roleApproval: { type: String, enum: ['pending', 'approved'], default: 'approved' },
   rollNumber: { type: String },
   department: { type: String },
   hostel: { type: String },

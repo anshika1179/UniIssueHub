@@ -4,6 +4,7 @@ import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
 import {
   createComplaint,
+  getComplaintImage,
   getComplaints,
   getComplaint,
   getComplaintHistory,
@@ -14,6 +15,8 @@ import {
   getAssignment
 } from '../controllers/assignmentController.js';
 
+import { parseComplaintImage } from '../middleware/complaintImage.js';
+
 const router = express.Router();
 router.param('id', validateObjectId);
 router.use(validatePagination);
@@ -21,11 +24,13 @@ router.use(validatePagination);
 router.use(protect); // All complaint routes require auth
 
 router.route('/')
-  .post(createComplaint)
+  .post(authorizeRoles('student'), parseComplaintImage, createComplaint)
   .get(getComplaints);
 
 router.route('/:id')
   .get(getComplaint);
+
+router.get('/:id/images/:filename', getComplaintImage);
 
 router.route('/:id/history')
   .get(getComplaintHistory);

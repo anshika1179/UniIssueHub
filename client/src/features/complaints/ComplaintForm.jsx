@@ -14,6 +14,7 @@ const ComplaintForm = () => {
     priority: 'medium',
     location: ''
   });
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,7 +31,7 @@ const ComplaintForm = () => {
 
     setLoading(true);
     try {
-      await complaintService.createComplaint(form);
+      await complaintService.createComplaint(form, image);
       navigate('/complaints');
     } catch (err) {
       setError(err?.message || 'Failed to submit complaint.');
@@ -112,6 +113,19 @@ const ComplaintForm = () => {
               className="input-field resize-none" 
               placeholder="Provide detailed information..."
             />
+          </div>
+
+          <div>
+            <label htmlFor="complaint-image" className="block text-sm font-medium text-dark mb-1">Image (optional)</label>
+            <input id="complaint-image" type="file" accept="image/jpeg,image/png,image/webp" className="input-field text-sm" onChange={e => {
+              const file = e.target.files?.[0]; setError(''); setImage(null);
+              if (!file) return;
+              if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+                e.target.value = ''; setError('Use a JPEG, PNG or WebP image up to 5 MB.'); return;
+              }
+              setImage(file);
+            }} />
+            <p className="text-xs text-sage-700 mt-1">JPEG, PNG or WebP, up to 5 MB. You can submit without an image.</p>
           </div>
 
           <div className="pt-2">

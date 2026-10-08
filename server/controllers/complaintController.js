@@ -2,6 +2,7 @@ import Complaint from '../models/Complaint.js';
 import Assignment from '../models/Assignment.js';
 import ComplaintHistory from '../models/ComplaintHistory.js';
 import Counter from '../models/Counter.js';
+import { storeComplaintImage, removeComplaintImage, imageDirectory } from '../middleware/complaintImage.js';
 import { analyzeComplaint } from '../services/ai/aiService.js';
 import { createNotification } from '../services/notification/notificationService.js';
 
@@ -9,6 +10,8 @@ const VALID_CATEGORIES = ['electricity', 'water', 'internet', 'cleanliness', 'ma
 const VALID_PRIORITIES = ['low', 'medium', 'high', 'critical'];
 
 export const createComplaint = async (req, res) => {
+  let imageName;
+  let savedComplaint;
   try {
     const { title, description, category, priority, location } = req.body;
 
@@ -27,6 +30,11 @@ export const createComplaint = async (req, res) => {
     }
     if (!VALID_PRIORITIES.includes(priority)) {
       return res.status(400).json({ success: false, message: 'Invalid priority.' });
+    }
+
+    if (req.file) {
+      try { imageName = await storeComplaintImage(req.file); }
+      catch { return res.status(400).json({ success: false, message: 'Could not save image. Use a valid JPEG, PNG or WebP image up to 5 MB.' }); }
     }
 
     // Generate complaintNumber UIH-{YEAR}-{SEQ}
@@ -50,9 +58,11 @@ export const createComplaint = async (req, res) => {
       category,
       priority,
       location: location.trim(),
-      status: 'pending' // Enforced creation status
+      status: 'pending', // Enforced creation status
+      attachments: imageName ? [imageName] : []
     });
 
+    savedComplaint = complaint;
     await ComplaintHistory.create({
       complaintId: complaint._id,
       actorId: req.user._id,
@@ -77,6 +87,7 @@ export const createComplaint = async (req, res) => {
 
     res.status(201).json({ success: true, data: complaint });
   } catch (error) {
+    if (imageName && !savedComplaint) await removeComplaintImage(imageName).catch(err => console.error('Image cleanup failed:', err.message));
     res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -215,4 +226,20 @@ export const closeComplaint = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
+export const getComplaintImage = async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ success: false, message: 'Complaint not found.' });
+    if (req.user.role === 'student' && String(complaint.studentId) !== String(req.user._id)) return res.sendStatus(403);
+    if (req.user.role === 'technician' && !await Assignment.exists({ complaintId: complaint._id, technicianId: req.user._id, status: { $ne: 'cancelled' } })) return res.sendStatus(403);
+    const name = req.params.filename;
+    if (!/^[a-f0-9-]{36}\.jpg$/.test(name) || !complaint.attachments.includes(name)) return res.sendStatus(404);
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Cache-Control', 'private, no-store');
+    res.sendFile(name, { root: imageDirectory }, error => {
+      if (error && !res.headersSent) res.sendStatus(error.statusCode || 404);
+    });
+  } catch { res.sendStatus(500); }
 };

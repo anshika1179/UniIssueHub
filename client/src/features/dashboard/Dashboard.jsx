@@ -160,6 +160,7 @@ const Dashboard = () => {
           <Link to="/complaints" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors">
             <ListIcon /> <span className="mt-0.5">Complaints</span>
           </Link>
+          {user?.role === 'admin' && <Link to="/admin/pending-accounts" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors"><ListIcon /> Pending accounts</Link>}
           {user?.role === 'technician' && (
             <Link to="/assignments/my" className="flex items-center gap-3 px-4 py-3 text-sage-800 hover:bg-[#D3E0C5]/50 rounded-md font-medium transition-colors">
               <ListIcon /> <span className="mt-0.5">My Assignments</span>

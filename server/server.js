@@ -5,12 +5,16 @@ import http from 'http';
 import app from './app.js';
 import connectDB from './config/db.js';
 import config from './config/config.js';
+import Assignment from './models/Assignment.js';
 import { initSocket } from './socket/socket.js';
 
 const startServer = async () => {
   try {
     // Connect to MongoDB
     await connectDB();
+    // Do not accept requests until the race-prevention index exists.
+    // Existing duplicate active assignments must be reviewed, not silently deleted.
+    await Assignment.init();
 
     const server = http.createServer(app);
     initSocket(server);

@@ -25,6 +25,7 @@ const complaintSchema = new mongoose.Schema({
     index: true
   },
   attachments: [{ type: String }],
+  assignmentLock: { type: String, select: false },
   resolvedAt: { type: Date },
   closedAt: { type: Date }
 }, {
